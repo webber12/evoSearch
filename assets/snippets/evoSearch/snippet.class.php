@@ -47,7 +47,7 @@ public function __construct($modx, $params, $min_length = 2, $ext_content_field 
 public function Highlight($whereText, $whatText) {
 
     $highlightWords = $highlightWordsRepl = array();
-    $highlightWordsT = Words2AllForms($whatText);
+    $highlightWordsT = $this->Words2AllForms($whatText);
     
     foreach ( $highlightWordsT as $k => $v ) {
         if ( !$v ) {
