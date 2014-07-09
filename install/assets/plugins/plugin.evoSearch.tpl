@@ -32,4 +32,4 @@
  *
 */
 
-require_once MODX_BASE_PATH."assets/plugins/evoSearch/evoSearch.plugin.php";
+require_once MODX_BASE_PATH . "assets/plugins/evoSearch/evoSearch.plugin.php";

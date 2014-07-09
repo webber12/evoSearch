@@ -18,5 +18,5 @@
 //пример вызова - для вывода результатов [!evoSearch? &tpl=`evoSearch`!], где все параметры - дублируют параметры вызова DocLister
 //обрабатывает $_GET['search'] в качестве входной строки для поиска
 
-require_once MODX_BASE_PATH."assets/snippets/evoSearch/evoSearch.snippet.php";
+require_once MODX_BASE_PATH . "assets/snippets/evoSearch/evoSearch.snippet.php";
 

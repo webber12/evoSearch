@@ -108,7 +108,7 @@ public function makeSQLForSelectWords () {
 public function makeWordsFromText($text) {
     $words = array();
     $words = preg_replace('#\[.*\]#isU', '', $text);
-    $words = str_replace(array('&ndash;','&raquo;','&laquo;','&darr;','&rarr;'), array('','','','',''), $words);
+    $words = str_replace(array('&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;'), array('', '', '', '', ''), $words);
     $words = preg_split('#\s|[,.:;!?"\'()]#', $text, -1, PREG_SPLIT_NO_EMPTY);
     return $words;
 }

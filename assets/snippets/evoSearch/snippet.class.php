@@ -34,7 +34,7 @@ public function __construct($modx, $params, $min_length = 2, $ext_content_field 
     $this->content_table = $this->modx->getFullTableName("site_content");
     $this->ext_content_field = $ext_content_field;
     $this->ext_content_index_field = $ext_content_index_field;
-	$this->stemmer = $this->getStemmer();
+    $this->stemmer = $this->getStemmer();
 }
 
 /**
@@ -105,7 +105,7 @@ public function Words2AllForms($text) {
 public function makeWordsFromText($text) {
     $words = array();
     $words = preg_replace('#\[.*\]#isU', '', $text);
-    $words = str_replace(array('&ndash;','&raquo;','&laquo;','&darr;','&rarr;'), array('','','','',''), $words);
+    $words = str_replace(array('&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;'), array('', '', '', '', ''), $words);
     $words = preg_split('#\s|[,.:;!?"\'()]#', $text, -1, PREG_SPLIT_NO_EMPTY);
     return $words;
 }

@@ -10,18 +10,18 @@ $eSS = new evoSearchSnippet($modx, $params);
 
 if (isset($_GET['search']) && $_GET['search'] != '') {
     $txt_original = $eSS->modx->db->escape($_GET['search']);
-	//echo '<br>'.$txt_original.'<br>';
+    //echo '<br>'.$txt_original.'<br>';
     $w = $eSS->Words2AllForms($txt_original);
     $txt = '';
     foreach ($w as $v) {
-        $txt .= ' '.implode(" ", $v);
+        $txt .= ' ' . implode(" ", $v);
     }
     if ($txt == '') {
-        $sql = "SELECT *,(MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $eSS->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('".$txt_original."')>2 OR MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > 2) ORDER BY rel DESC";
+        $sql = "SELECT *, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $eSS->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('".$txt_original."')>2 OR MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > 2) ORDER BY rel DESC";
     } else {
-        $sql = "SELECT *,(MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt . "') * 5 + MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . " ".$txt."')) as rel FROM " . $eSS->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('".$txt_original." ".$txt."')>2 OR MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt."') > 2) ORDER BY rel DESC";
+        $sql = "SELECT *, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt . "') * 5 + MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . " ".$txt."')) as rel FROM " . $eSS->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('".$txt_original." ".$txt."')>2 OR MATCH (`" . $eSS->ext_content_field . "`, `" . $eSS->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt."') > 2) ORDER BY rel DESC";
     }
-	//echo $sql;
+    //echo $sql;
     $q = $eSS->modx->db->query($sql);
     while($row = $modx->db->getRow($q)) {
         $out .= $row['id'].',';
@@ -51,7 +51,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
             $s = implode(",", $bulk_words_original);
             if ($s != '') {
                 $eSS->params['filters'] = 'OR(content:pagetitle:eq:'.$txt_original.';content:pagetitle:like-r:'.$txt_original.';content:pagetitle:like-l:'.$txt_original.';content:pagetitle:like: '.$txt_original.' ;content:pagetitle:against:' . $txt_original . ';content:' . $eSS->ext_content_field . ',' . $eSS->ext_content_index_field . ':against:' . $txt_original . ' ' . strtoupper($txt_original) . ')';
-			    //print_r($eSS->params);
+                //print_r($eSS->params);
                 $output .= $eSS->modx->runSnippet($worker, $eSS->params);
             }
         }
