@@ -125,5 +125,16 @@ public function getStemmer() {
     return $stemmer = new Lingua_Stem_Ru();
 }
 
+public function Set($key, $value, $escape = false) {
+    if ($escape) {
+        $this->{$key} = $this->modx->db->escape($value);
+    } else {
+        $this->{$key} = $value;
+    }
+}
+
+public function Get($key, $default='') {
+    return $this->{$key} ? $this->{$key} : $default ;
+}
 
 }//class end
