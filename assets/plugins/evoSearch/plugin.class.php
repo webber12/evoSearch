@@ -123,4 +123,15 @@ public function makeBulkWords($words, $upper = true) {
 	return $bulk_words;
 }
 
+public function injectTVs($id, $content) {
+	$tvs = '';
+	if ($this->params['TvNames'] != '') {
+		$TvNames = explode(',', $this->params['TvNames']);
+		$TvValues = $this->modx->getTemplateVarOutput($TvNames, $id);
+		$tvs = $this->modx->stripTags(implode(', ', $TvValues));
+	}
+	$content .= ($tvs != '' ? ' '.$tvs : '');
+	return $content;
+}
+
 }

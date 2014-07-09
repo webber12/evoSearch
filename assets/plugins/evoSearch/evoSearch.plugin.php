@@ -11,10 +11,10 @@ if ($e->name == 'OnDocFormSave') {
     while ($row = $eSP->modx->db->getRow($q)) {
         $content_original = $row['pagetitle'] . ' ' . $row['longtitle'] . ' ' . $row['description'] . ' ' . $row['introtext'] . ' ' . $row['content'];
         $content = $eSP->modx->stripTags($content_original);
-        //echo $content.'<hr>';
+        $content = $eSP->injectTVs($row['id'], $content);
         $words = $eSP->Words2BaseForm($content);
         $upd = $eSP->modx->db->update(
-            array($eSP->ext_content_field => $content_original, $eSP->ext_content_index_field => $words),
+            array($eSP->ext_content_field => $content, $eSP->ext_content_index_field => $words),
             $eSP->content_table,
             'id=' . $row['id']
             );

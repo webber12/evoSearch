@@ -8,7 +8,7 @@
  * @version     0.1
  * @license     http://www.gnu.org/copyleft/gpl.html GNU Public License (GPL)
  * @internal    @events OnDocFormSave
- * @internal    @properties &offset=Первая строка переиндексации;text;0 &rowsperonce=Строк за сеанс индексировать;text;1 &reindex=Переиндексировать все;text;0 &excludeTmpls=Исключить шаблоны;text; &excludeIDs=Исключить ID ресурсов;text; &TvIDs=ID TV для поиска;text;  &unpublished=Индексировать неопубликованные;text;0 &deleted=Индексировать удаленные;text;0 &dicts=Использовать словари;text;rus,eng
+ * @internal    @properties &offset=Первая строка переиндексации;text;0 &rowsperonce=Строк за сеанс индексировать;text;1 &reindex=Переиндексировать все;text;0 &excludeTmpls=Исключить шаблоны;text; &excludeIDs=Исключить ID ресурсов;text; &TvNames=Имена TV для поиска;text; &unpublished=Индексировать неопубликованные;text;0 &deleted=Индексировать удаленные;text;0 &dicts=Использовать словари;text;rus,eng
  * @internal    @installset base, sample
  * @internal    @modx_category Search
  */
@@ -28,7 +28,7 @@
  * для последующей работы установите "Переиндексировать все" = 0, "Строк за сеанс индексировать" = 1 
  * при этом происходит переиндксация только того документа, который сохраняется
  *
- * в настоящий момент индексации по TV не производится, индексируются только pagetitle,longtitle,description,introtext.content
+ * индексируются pagetitle,longtitle,description,introtext.content и указанные явно в плагине ТВ (по именам через запятую)
  *
 */
 
