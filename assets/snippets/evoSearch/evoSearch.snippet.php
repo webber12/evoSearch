@@ -42,6 +42,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     if ($out == '') {
         if ($worker == 'DocLister') {
             $eSS->params['documents'] = '';
+            $eSS->params['addWhereList'] = 'c.searchable=1';
             $q = $eSS->modx->db->query("SELECT id FROM " . $eSS->content_table . " WHERE `searchable`='1' AND `deleted`='0' AND `published`='1' ORDER BY createdon DESC");
             while ($row = $eSS->modx->db->getRow($q)) {
                 $eSS->params['documents'] .= $row['id'].',';
@@ -59,8 +60,10 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
         if ($worker == 'DocLister') {
             $eSS->params['sortType'] = "doclist";
             $eSS->params['idType'] = "documents";
+            $eSS->params['addWhereList'] = 'c.searchable=1';
         } else if ($worker == 'Ditto') {
             $eSS->params['extenders'] = 'nosort';
+            $eSS->params['where'] = 'searchable=1';
         } else {}
         $output .= $eSS->modx->runSnippet($worker, $eSS->params);
     }
