@@ -14,7 +14,7 @@ if ($e->name == 'OnDocFormSave') {
         $content = $eSP->injectTVs($row['id'], $content);
         $words = $eSP->Words2BaseForm($content);
         $upd = $eSP->modx->db->update(
-            array($eSP->ext_content_field => $content, $eSP->ext_content_index_field => $words),
+            array($eSP->ext_content_field => $eSP->modx->db->escape($content), $eSP->ext_content_index_field => $eSP->modx->db->escape($words)),
             $eSP->content_table,
             'id=' . $row['id']
             );
