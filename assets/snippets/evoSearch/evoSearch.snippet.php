@@ -2,7 +2,7 @@
 if(!defined('MODX_BASE_PATH')) die('What are you doing? Get out of here!');
 
 $documents = '';
-$output = '';
+$output = isset($params['noneTPL']) ? $params['noneTPL'] : $params['noResults'];
 $txt_original = '';
 
 include_once('snippet.class.php');
@@ -72,4 +72,4 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
 }
 
 //print_r($params);
-echo $output != '' ? $output : 'Ничего не найдено. Смягчите условия поиска';
+return $output;
