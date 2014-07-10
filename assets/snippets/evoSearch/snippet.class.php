@@ -168,10 +168,10 @@ public function buildFulltextSQL ($txt_original = '', $txt_ext = '') {
     return $sql;
 }
 
-public function makeStringFromQuery ($q, $serapator = ',') {
+public function makeStringFromQuery ($q, $serapator = ',', $field = 'id') {
     $out = array();
     while ($row = $this->modx->db->getRow($q)) {
-        $out[] = $row['id'];
+        $out[] = $row[$field];
     }
     return implode($serapator, $out);
 }
