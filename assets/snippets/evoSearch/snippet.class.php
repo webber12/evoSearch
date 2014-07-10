@@ -22,6 +22,15 @@ public $ext_content_field;
 //сформированный на основе $ext_content_field индекс из словоформ этого поля
 public $ext_content_index_field;
 
+//поисковая строка (оригинальная, пропущенная через escape $_GET['search']
+public $txt_original = '';
+
+//словоформы всех слов из поисковой строки, массив
+public $txt_ext_array = array();
+
+//словоформы всех слов из поисковой строки, строка. Слова разделены пробелами. Основной текст для организации полнотекстового поиска
+public $txt_ext = array();
+
 
 public function __construct($modx, $params, $min_length = 2, $ext_content_field = 'content_with_tv', $ext_content_index_field = 'content_with_tv_index') {
     $this->modx = $modx;
@@ -135,6 +144,56 @@ public function Set($key, $value, $escape = false) {
 
 public function Get($key, $default='') {
     return $this->{$key} ? $this->{$key} : $default ;
+}
+
+public function makeSearchSQL ($txt_original = '') {
+    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
+    $this->txt_ext_array = $this->Words2AllForms($txt_original);
+    $this->txt_ext = '';
+    foreach ($this->txt_ext_array as $v) {
+        $this->txt_ext .= ' ' . implode(" ", $v);
+    }
+    $sql = $this->buildFulltextSQL ();
+    return $sql;
+}
+
+public function buildFulltextSQL ($txt_original = '', $txt_ext = '') {
+    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
+    $txt_ext = ($txt_ext == '' ? $this->Get('txt_ext') : $txt_ext);
+    if ($txt_ext == '') {
+        $sql = "SELECT *, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > 2) ORDER BY rel DESC";
+    } else {
+        $sql = "SELECT *, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext."') > 2) ORDER BY rel DESC";
+    }
+    return $sql;
+}
+
+public function makeStringFromQuery ($q, $serapator = ',') {
+    $out = array();
+    while ($row = $this->modx->db->getRow($q)) {
+        $out[] = $row['id'];
+    }
+    return implode($serapator, $out);
+}
+
+public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original = '', $worker = 'DocLister') {
+    $output = '';
+    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
+    $this->params['documents'] = ''; //очищаем список документов, если там что-то было
+    $this->params['addWhereList'] = 'c.searchable=1'; //условия поиска только среди доступных для поиска
+    //$this->params['sortType'] = 'doclist'; - тут будем сортировать по умолчанию - по дате создания/публикации
+    
+    //берем id всех документов сайта
+    $q = $this->modx->db->query("SELECT id FROM " . $this->content_table . " WHERE `searchable`='1' AND `deleted`='0' AND `published`='1'");
+    $documents = $this->makeStringFromQuery($q);
+    $this->params['documents'] = $documents;
+    
+    $s = implode(",", $bulk_words_original);
+    if ($s != '') {//если в поиске есть хоть одно значимое слово, то будем искать
+        $this->params['filters'] = 'OR(content:pagetitle:eq:' . $txt_original . ';content:pagetitle:like-r:' . $txt_original . ';content:pagetitle:like-l:' . $txt_original . ';content:pagetitle:like: ' . $txt_original . ' ;content:pagetitle:against:' . $txt_original . ';content:' . $this->ext_content_field . ',' . $this->ext_content_index_field . ':against:' . $txt_original . ')';
+        $output .= $this->modx->runSnippet($worker, $this->params);
+    }
+    return $output;
 }
 
 }//class end
