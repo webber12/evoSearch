@@ -3,6 +3,7 @@ if(!defined('MODX_BASE_PATH')) die('What are you doing? Get out of here!');
 
 $documents = '';
 $output = '';
+$noResult = isset($params['noResult']) ? $params['noResult'] : 'Ничего не найдено. Смягчите условия поиска';
 $txt_original = '';
 
 include_once('snippet.class.php');
@@ -48,4 +49,4 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
 }
 
 //print_r($params);
-echo $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : 'Ничего не найдено. Смягчите условия поиска');
+echo $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : '<div class="noResult">'.$noResult.'</div>');
