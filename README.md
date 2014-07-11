@@ -1,6 +1,5 @@
 ### author webber (web-ber12@yandex.ru)
 
-
 ### набор evoSearch - индексирование и поиск с учетом морфологии (версия 0.1)
 
 ### DONATE
