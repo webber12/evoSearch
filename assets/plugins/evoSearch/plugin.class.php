@@ -128,10 +128,34 @@ public function injectTVs($id, $content) {
     if ($this->params['TvNames'] != '') {
         $TvNames = explode(',', $this->params['TvNames']);
         $TvValues = $this->modx->getTemplateVarOutput($TvNames, $id);
-        $tvs = $this->modx->stripTags(implode(', ', $TvValues));
+        if(is_array($TvValues) && !empty($TvValues)) {
+            $tvs = $this->modx->stripTags(implode(', ', $TvValues));
+        }
     }
     $content .= ($tvs != '' ? ' '.$tvs : '');
     return $content;
+}
+
+private function checkColumnExists($columnname, $table) {
+    $columns = $this->modx->db->getTableMetaData($table);
+    return isset($columns[$columnname]);
+}
+
+private function createSearchColumns() {
+    $sql = "ALTER TABLE " . $this->content_table . " ADD `" . $this->ext_content_field . "` MEDIUMTEXT NOT NULL";
+    $this->modx->db->query($sql);
+    $sql = "ALTER TABLE " . $this->content_table . " ADD `" . $this->ext_content_index_field . "` MEDIUMTEXT NOT NULL";
+    $this->modx->db->query($sql);
+    $sql = "ALTER TABLE " . $this->content_table . " ADD FULLTEXT content_index (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`)";
+    $this->modx->db->query($sql);
+    $sql = "ALTER TABLE " . $this->content_table . " ADD FULLTEXT(`pagetitle`)";
+    $this->modx->db->query($sql);
+}
+
+public function prepareRun() {
+    if (!$this->checkColumnExists($this->ext_content_field, $this->content_table)) {
+        $this->createSearchColumns();
+    }
 }
 
 }
