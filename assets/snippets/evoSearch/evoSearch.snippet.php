@@ -32,7 +32,9 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
 
     if ($documents == '') {
         if ($worker == 'DocLister') {
-            $output .= $eSS->makeAddQueryForEmptyResult($bulk_words_original);
+            if (!isset($eSS->params['addSearch']) || $eSS->params['addSearch'] != '0') {
+                $output .= $eSS->makeAddQueryForEmptyResult($bulk_words_original);
+            }
         }
     } else {
         if ($worker == 'DocLister') {
