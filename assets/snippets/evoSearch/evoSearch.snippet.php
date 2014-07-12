@@ -23,17 +23,19 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     $words_original = $eSS->makeWordsFromText($eSS->Get('txt_original'));
     $bulk_words_original = $eSS->makeBulkWords($words_original, false);
 
-    //TODO stemmer for extractor
-    $bulk_words_stemmer = array();
+    $eSS->bulk_words_stemmer = array();
     foreach ($bulk_words_original as $v) {
-        $bulk_words_stemmer[] = $eSS->stemmer->stem_word($v);
+        $eSS->bulk_words_stemmer[] = $eSS->stemmer->stem_word($v);
     }
-    //end TODO
 
     if ($documents == '') {
         if ($worker == 'DocLister') {
             if (!isset($eSS->params['addSearch']) || $eSS->params['addSearch'] != '0') {
-                $output .= $eSS->makeAddQueryForEmptyResult($bulk_words_original);
+                $eSS->makeAddQueryForEmptyResult($bulk_words_original);
+                if (isset($eSS->params['extract']) && $eSS->params['extract'] == '1') {
+                    $eSS->params['prepare'] = array($eSS,'prepareExtractor');
+                }
+                $output .= $eSS->modx->runSnippet($worker, $eSS->params);
             }
         }
     } else {
@@ -41,6 +43,9 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
             $eSS->params['sortType'] = "doclist";
             $eSS->params['idType'] = "documents";
             $eSS->params['addWhereList'] = 'c.searchable=1';
+            if (isset($eSS->params['extract']) && $eSS->params['extract'] == '1') {
+                $eSS->params['prepare'] = array($eSS,'prepareExtractor');
+            }
         } else if ($worker == 'Ditto') {
             $eSS->params['extenders'] = 'nosort';
             $eSS->params['where'] = 'searchable=1';

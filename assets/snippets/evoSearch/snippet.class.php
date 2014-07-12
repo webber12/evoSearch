@@ -46,31 +46,52 @@ public function __construct($modx, $params, $min_length = 2, $ext_content_field 
     $this->stemmer = $this->getStemmer();
 }
 
-/**
- * Подсветка слов поискового запроса
- *
- * @param string $whereText
- * @param string $whatText
- * @return string
- */
-public function Highlight($whereText, $whatText) {
+//функция для prepare-сниппета DocLister (готовим данные для плейсхолдера [+extract+] в чанк вывода результатов DocLister
+public function prepareExtractor($data) {
+    $data = $this->makeHighlight ($data);
+    return $data;
+}
 
-    $highlightWords = $highlightWordsRepl = array();
-    $highlightWordsT = $this->Words2AllForms($whatText);
-    
-    foreach ( $highlightWordsT as $k => $v ) {
-        if ( !$v ) {
-            $highlightWords[]  = "#\b($k)\b#isU";
-            $highlightWordsRepl[] = '[highlight]\\1[/highlight]';
+//делаем подсветку на основе стеммера
+public function makeHighlight ($data) {
+    if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
+        $input = implode('|', $this->bulk_words_stemmer);
+        $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
+        $replacement = '<span class="evoSearch_highlight">$1$2</span>';
+        $text = $this->getTextForHighlight($data["content"]);
+        $pagetitle = $this->modx->stripTags($data["pagetitle"]);
+        $data["extract"] = preg_replace($pattern, $replacement, $text);
+        $data["pagetitle"] = preg_replace($pattern, $replacement, $pagetitle);
+    }
+    return $data;
+}
+
+//вырезаем нужный кусок текста нужной длины (примерно)
+private function getTextForHighlight($text) {
+    $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
+    $limit = $max_length + 12;
+    $text = $this->modx->stripTags($text);
+    $pos = array();
+    foreach ($this->bulk_words_stemmer as $word) {
+        $pos[$word] = mb_strpos(mb_strtolower($text), $word);
+    }
+    foreach ($pos as $word => $position) {
+        $length = mb_strlen($text);
+        if ($position == 0 && $length > $limit) {
+            $text = substr($text, $position, $max_length) . ' ... ';
+        } else if ($position < $max_length && $length > $limit) {
+            $text = ' ... ' . substr($text, $position, $max_length) . ' ... ';
+        } else if ($position + $limit >= $length && $length > $limit) {
+            $text = substr($text, $position);
+        } else if ($length > $limit){
+            $text = ' ... ' . substr($text, $position, $max_length) . ' ... ';
         } else {
-            foreach ( $v as $v1 ) {
-                $highlightWords[]  = "#\b($v1)\b#isU";
-                $highlightWordsRepl[] = '[highlight]\\1[/highlight]';
-            }
+
         }
     }
-    return $message['message_text'] = preg_replace(array_reverse($highlightWords), '[highlight]$1[/highlight]', $whereText);
+    return $text;
 }
+
 
 /**
  * Возвращает все словоформы слов поискового запроса
@@ -191,9 +212,9 @@ public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original =
     $s = implode(",", $bulk_words_original);
     if ($s != '') {//если в поиске есть хоть одно значимое слово, то будем искать
         $this->params['filters'] = 'OR(content:pagetitle:eq:' . $txt_original . ';content:pagetitle:like-r:' . $txt_original . ';content:pagetitle:like-l:' . $txt_original . ';content:pagetitle:like: ' . $txt_original . ' ;content:pagetitle:against:' . $txt_original . ';content:' . $this->ext_content_field . ',' . $this->ext_content_index_field . ':against:' . $txt_original . ')';
-        $output .= $this->modx->runSnippet($worker, $this->params);
+        //$output .= $this->modx->runSnippet($worker, $this->params);
     }
-    return $output;
+    //return $this->params;
 }
 
 }//class end
