@@ -56,6 +56,7 @@ public function prepareExtractor($data) {
 public function makeHighlight ($data) {
     if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
         $input = implode('|', $this->bulk_words_stemmer);
+        $input = str_replace('\\', '', $input);
         $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
         $replacement = '<span class="evoSearch_highlight">$1$2</span>';
         $text = $this->getTextForHighlight($data["content"]);
@@ -215,6 +216,17 @@ public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original =
         //$output .= $this->modx->runSnippet($worker, $this->params);
     }
     //return $this->params;
+}
+
+public function getSearchResultInfo(){
+    $out = '';
+    $count = $this->modx->getPlaceholder('count');
+    $display = $this->modx->getPlaceholder('display');
+    $current = $this->modx->getPlaceholder('current');
+    $from = ($current - 1) * $this->params['display'] + 1;
+    $to = $from - 1 + $display;
+    $out .= '<div class="evoSearch_info">По запросу <b>' . $this->Get('txt_original') . '</b> найдено всего ' . $count . '. Показано c ' . $from . ' по ' . $to . '</div>';
+    return $out;
 }
 
 }//class end

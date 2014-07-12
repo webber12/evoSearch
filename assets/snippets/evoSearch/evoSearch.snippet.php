@@ -18,6 +18,8 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     $q = $eSS->modx->db->query($sql);
     $documents = $eSS->makeStringFromQuery($q);
     $eSS->params['documents'] = $documents;
+    $eSS->params['display'] = isset($eSS->params['display']) ? $eSS->params['display'] : "20";
+    $eSS->params['paginate'] = isset($eSS->params['paginate']) ? $eSS->params['paginate'] : "pages";
     $worker = isset($eSS->params['worker']) ? $eSS->params['worker'] : "DocLister";
 
     $words_original = $eSS->makeWordsFromText($eSS->Get('txt_original'));
@@ -36,6 +38,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
                     $eSS->params['prepare'] = array($eSS,'prepareExtractor');
                 }
                 $output .= $eSS->modx->runSnippet($worker, $eSS->params);
+                $output = $eSS->getSearchResultInfo() . $output;
             }
         }
     } else {
@@ -45,12 +48,16 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
             $eSS->params['addWhereList'] = 'c.searchable=1';
             if (isset($eSS->params['extract']) && $eSS->params['extract'] == '1') {
                 $eSS->params['prepare'] = array($eSS,'prepareExtractor');
+                $output .= $eSS->modx->runSnippet($worker, $eSS->params);
+                $output = $eSS->getSearchResultInfo() . $output;
             }
         } else if ($worker == 'Ditto') {
             $eSS->params['extenders'] = 'nosort';
             $eSS->params['where'] = 'searchable=1';
-        } else {}
-        $output .= $eSS->modx->runSnippet($worker, $eSS->params);
+            $output .= $eSS->modx->runSnippet($worker, $eSS->params);
+        } else {
+            $output .= $eSS->modx->runSnippet($worker, $eSS->params);
+        }
     }
 
 }
