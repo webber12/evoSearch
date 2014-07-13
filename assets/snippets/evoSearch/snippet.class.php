@@ -225,8 +225,16 @@ public function getSearchResultInfo(){
     $current = $this->modx->getPlaceholder('current');
     $from = ($current - 1) * $this->params['display'] + 1;
     $to = $from - 1 + $display;
-    $out .= '<div class="evoSearch_info">По запросу <b>' . $this->Get('txt_original') . '</b> найдено всего ' . $count . '. Показано c ' . $from . ' по ' . $to . '</div>';
+    $out .= $this->parseTpl(
+                     array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]', ),
+                     array($this->Get('txt_original'), $count, $display, $from, $to),
+                     $this->params['statTpl']
+                    );
     return $out;
+}
+
+public function parseTpl($arr1, $arr2, $tpl) {
+    return str_replace($arr1, $arr2, $tpl);
 }
 
 }//class end
