@@ -175,19 +175,27 @@ public function makeSearchSQL ($txt_original = '') {
     foreach ($this->txt_ext_array as $v) {
         $this->txt_ext .= ' ' . implode(" ", $v);
     }
-    $sql = $this->buildFulltextSQL ();
-    return $sql;
+    $query = $this->buildFulltextSQL ();
+    //print_r($sql);
+    return $query;
 }
 
 public function buildFulltextSQL ($txt_original = '', $txt_ext = '') {
     $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
+    $tmp = array();
     $txt_ext = ($txt_ext == '' ? $this->Get('txt_ext') : $txt_ext);
     if ($txt_ext == '') {
-        $sql = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > 2) ORDER BY rel DESC";
+        $tmp['sql'] = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > 2) ORDER BY rel DESC";
+        $tmp['selectFields'] = "c.*, (MATCH(c.pagetitle) AGAINST('" . $txt_original . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "')) as rel";
+        $tmp['addWhereList'] = "c.searchable='1' AND (MATCH(c.pagetitle) AGAINST('" . $txt_original . "')>2 OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "') > 2)";
+        $tmp['orderBy'] = 'rel DESC';
     } else {
-        $sql = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext."') > 2) ORDER BY rel DESC";
+        $tmp['sql'] = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "')>2 OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext."') > 2) ORDER BY rel DESC";
+        $tmp['selectFields'] = "c.*, (MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel";
+        $tmp['addWhereList'] = "c.searchable='1' AND (MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "')>2 OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext."') > 2)";
+        $tmp['orderBy'] = 'rel DESC';
     }
-    return $sql;
+    return $tmp;
 }
 
 public function makeStringFromQuery ($q, $serapator = ',', $field = 'id') {
