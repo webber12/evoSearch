@@ -36,7 +36,7 @@ class Lingua_Stem_Ru
 
     function stem_word($word) 
     {
-        $word = mb_strtolower($word);
+        $word = mb_strtolower($word, 'UTF-8');
         //$word = strtr($word, 'ё', 'е'); // замена ё на е, что бы учитывалась как одна и та же буква
         # Check against cache of stemmed words
         if ($this->Stem_Caching && isset($this->Stem_Cache[$word])) {

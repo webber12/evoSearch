@@ -173,7 +173,11 @@ public function makeSearchSQL ($txt_original = '') {
     $this->txt_ext_array = $this->Words2AllForms($txt_original);
     $this->txt_ext = '';
     foreach ($this->txt_ext_array as $v) {
-        $this->txt_ext .= ' ' . implode(" ", $v);
+        if (is_array($v)) {
+            $this->txt_ext .= ' ' . implode(" ", $v);
+        } else {
+            $this->txt_ext .= ' ' . $v;
+        }
     }
     $query = $this->buildFulltextSQL ();
     //print_r($sql);
