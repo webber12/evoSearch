@@ -105,6 +105,19 @@ public function makeSQLForSelectWords () {
     return $sql;
 }
 
+public function emptyExcluded() {
+    if (isset($this->params['reindex']) && (int)$this->params['reindex'] != 0) {
+        $where = '';
+        $where .= ($this->params['excludeTmpls'] != '' ? ' template IN(' . $this->params['excludeTmpls'] . ') ' : '');
+        $where .= ($this->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id IN(' . $this->params['excludeIDs'] . ') ' : '');
+        $upd = $this->modx->db->update(
+            array($this->ext_content_field => '', $this->ext_content_index_field => ''),
+            $this->content_table,
+            $where
+        );
+    }
+}
+
 public function makeWordsFromText($text) {
     $words = array();
     $words = preg_replace('#\[.*\]#isU', '', $text);
