@@ -110,11 +110,13 @@ public function emptyExcluded() {
         $where = '';
         $where .= ($this->params['excludeTmpls'] != '' ? ' template IN(' . $this->params['excludeTmpls'] . ') ' : '');
         $where .= ($this->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id IN(' . $this->params['excludeIDs'] . ') ' : '');
-        $upd = $this->modx->db->update(
-            array($this->ext_content_field => '', $this->ext_content_index_field => ''),
-            $this->content_table,
-            $where
-        );
+        if ($where != '') {
+            $upd = $this->modx->db->update(
+                array($this->ext_content_field => '', $this->ext_content_index_field => ''),
+                $this->content_table,
+                $where
+            );
+        }
     }
 }
 
