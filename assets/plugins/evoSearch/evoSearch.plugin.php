@@ -15,7 +15,7 @@ if ($e->name == 'OnDocFormSave') {
         $content_original = $row['pagetitle'] . ' ' . $row['longtitle'] . ' ' . $row['description'] . ' ' . $row['introtext'] . ' ' . $row['content'];
         $content = $eSP->modx->stripTags($content_original);
         $content = $eSP->injectTVs($row['id'], $content);
-        $words = $eSP->Words2BaseForm($content);
+        $words = $eSP->Words2BaseForm(mb_strtoupper($content, 'UTF-8'));
         $upd = $eSP->modx->db->update(
             array($eSP->ext_content_field => $eSP->modx->db->escape($content), $eSP->ext_content_index_field => $eSP->modx->db->escape($words)),
             $eSP->content_table,
