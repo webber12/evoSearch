@@ -74,24 +74,25 @@ private function getTextForHighlight($text) {
     $text = $this->modx->stripTags($text);
     $pos = array();
     foreach ($this->bulk_words_stemmer as $word) {
-        $pos[$word] = mb_strpos(mb_strtolower($text), $word);
+        $pos[$word] = mb_strripos(mb_strtolower($text, 'UTF-8'), $word, 0, 'UTF-8');
     }
     foreach ($pos as $word => $position) {
-        $length = mb_strlen($text);
+        $length = mb_strlen($text, 'UTF-8');
         if ($position == 0 && $length > $limit) {
-            $text = substr($text, $position, $max_length) . ' ... ';
+            $text = mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
         } else if ($position < $max_length && $length > $limit) {
-            $text = ' ... ' . substr($text, $position, $max_length) . ' ... ';
+            $text = ' ... ' . mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
         } else if ($position + $limit >= $length && $length > $limit) {
-            $text = substr($text, $position);
+            $text = mb_substr($text, $position);
         } else if ($length > $limit){
-            $text = ' ... ' . substr($text, $position, $max_length) . ' ... ';
+            $text = ' ... ' . mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
         } else {
 
         }
     }
     return $text;
 }
+
 
 
 /**
