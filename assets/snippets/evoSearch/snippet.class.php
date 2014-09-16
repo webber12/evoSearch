@@ -59,7 +59,11 @@ public function makeHighlight ($data) {
         $input = str_replace('\\', '', $input);
         $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
         $replacement = '<span class="evoSearch_highlight">$1$2</span>';
-        $text = $this->getTextForHighlight($data["content"]);
+        if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
+            $text = $this->getTextForHighlight($data[$this->ext_content_field]);
+        } else{
+            $text = $this->getTextForHighlight($data["content"]);
+        }
         $pagetitle = $this->modx->stripTags($data["pagetitle"]);
         $data["extract"] = preg_replace($pattern, $replacement, $text);
         $data["pagetitle"] = preg_replace($pattern, $replacement, $pagetitle);
