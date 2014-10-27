@@ -243,7 +243,7 @@ public function getSearchResultInfo(){
     $from = ($current - 1) * $this->params['display'] + 1;
     $to = $from - 1 + $display;
     $out .= $this->parseTpl(
-                     array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]', ),
+                     array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]'),
                      array($this->Get('txt_original'), $count, $display, $from, $to),
                      $this->params['statTpl']
                     );
