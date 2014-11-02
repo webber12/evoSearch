@@ -254,4 +254,12 @@ public function parseTpl($arr1, $arr2, $tpl) {
     return str_replace($arr1, $arr2, $tpl);
 }
 
+public function sanitarTag($data) {
+        return is_scalar($data) ? str_replace(
+            array('[', '%5B', ']', '%5D', '{', '%7B', '}', '%7D'),
+            array('&#91;', '&#91;', '&#93;', '&#93;', '&#123;', '&#123;', '&#125;', '&#125;'),
+            htmlspecialchars($data, ENT_COMPAT, 'UTF-8', false)
+        ) : '';
+    }
+
 }//class end

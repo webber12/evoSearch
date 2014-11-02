@@ -19,7 +19,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     $worker = isset($eSS->params['worker']) ? $eSS->params['worker'] : "DocLister";
     $eSS->params['rel'] = isset($eSS->params['rel']) ? (int)$eSS->params['rel'] : 2;
 
-    $eSS->Set('txt_original', $_GET['search'], true);
+    $eSS->Set('txt_original', $eSS->sanitarTag($_GET['search']), true);
     //echo '<br>'.$eSS->Get('txt_original').'<br>';
 
     $query = $eSS->makeSearchSQL();
