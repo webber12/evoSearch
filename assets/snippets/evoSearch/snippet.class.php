@@ -247,6 +247,15 @@ public function getSearchResultInfo(){
                      array($this->Get('txt_original'), $count, $display, $from, $to),
                      $this->params['statTpl']
                     );
+    $this->setPlaceholders(
+        array(
+            'stat_request' => $this->Get('txt_original'),
+            'stat_total' => $count, 
+            'stat_display' => $display,
+            'stat_from' => $from,
+            'stat_to' => $to
+        )
+    );
     return $out;
 }
 
@@ -260,6 +269,14 @@ public function sanitarTag($data) {
             array('&#91;', '&#91;', '&#93;', '&#93;', '&#123;', '&#123;', '&#125;', '&#125;'),
             htmlspecialchars($data, ENT_COMPAT, 'UTF-8', false)
         ) : '';
+}
+
+public function setPlaceholders($data = array()) {
+    if (is_array($data)) {
+        foreach ($data as $name => $value) {
+            $this->modx->setPlaceholder($name, $value);
+        }
     }
+}
 
 }//class end
