@@ -41,6 +41,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     if ($worker == 'DocLister') {
         $eSS->params['parents'] = "0";
         $eSS->params['depth'] = "7";
+        $eSS->params['showParent'] = "1";
         $eSS->params['addWhereList'] = $query['addWhereList'];
         $eSS->params['selectFields'] = $query['selectFields'];
         $eSS->params['orderBy'] = $query['orderBy'];
