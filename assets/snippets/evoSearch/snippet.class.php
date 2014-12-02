@@ -235,18 +235,20 @@ public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original =
     //return $this->params;
 }
 
-public function getSearchResultInfo(){
+public function getSearchResultInfo() {
     $out = '';
     $count = $this->modx->getPlaceholder('count');
     $display = $this->modx->getPlaceholder('display');
     $current = $this->modx->getPlaceholder('current');
     $from = ($current - 1) * $this->params['display'] + 1;
     $to = $from - 1 + $display;
-    $out .= $this->parseTpl(
+    if ($count && $count != '0' && $count != '') {
+        $out .= $this->parseTpl(
                      array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]'),
                      array($this->Get('txt_original'), $count, $display, $from, $to),
                      $this->params['statTpl']
                     );
+    }
     $this->setPlaceholders(
         array(
             'stat_total' => $count, 
