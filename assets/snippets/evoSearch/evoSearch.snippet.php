@@ -3,7 +3,7 @@ if(!defined('MODX_BASE_PATH')) die('What are you doing? Get out of here!');
 
 $documents = '';
 $output = '';
-$noResult = isset($params['noResult']) ? $params['noResult'] : 'Ничего не найдено. Смягчите условия поиска';
+$noResult = isset($params['noResult']) ? $params['noResult'] : 'По запросу <u>[+stat_request+]</u> ничего не найдено. Смягчите условия поиска';
 $txt_original = '';
 
 include_once('snippet.class.php');
@@ -20,6 +20,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     $eSS->params['rel'] = isset($eSS->params['rel']) ? str_replace(',', '.', round($eSS->params['rel'], 2)) : str_replace(',', '.', 0.01);
 
     $eSS->Set('txt_original', $eSS->sanitarTag($_GET['search']), true);
+	$modx->setPlaceholder('stat_request', $eSS->Get('txt_original'));
     //echo '<br>'.$eSS->Get('txt_original').'<br>';
 
     $query = $eSS->makeSearchSQL();
@@ -70,4 +71,4 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
 
 }
 
-echo $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : '<div class="noResult">'.$noResult.'</div>');
+echo $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : '<div class="noResult">' . $eSS->parseNoresult($noResult) . '</div>');

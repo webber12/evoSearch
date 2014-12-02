@@ -169,7 +169,7 @@ public function Set($key, $value, $escape = false) {
     }
 }
 
-public function Get($key, $default='') {
+public function Get($key, $default = '') {
     return $this->{$key} ? $this->{$key} : $default ;
 }
 
@@ -249,7 +249,6 @@ public function getSearchResultInfo(){
                     );
     $this->setPlaceholders(
         array(
-            'stat_request' => $this->Get('txt_original'),
             'stat_total' => $count, 
             'stat_display' => $display,
             'stat_from' => $from,
@@ -277,6 +276,10 @@ public function setPlaceholders($data = array()) {
             $this->modx->setPlaceholder($name, $value);
         }
     }
+}
+
+public function parseNoresult($noResult) {
+	return $this->parseTpl(array('stat_request'), array($this->Get('txt_original')), $noResult);
 }
 
 }//class end
