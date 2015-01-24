@@ -20,7 +20,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     $eSS->params['rel'] = isset($eSS->params['rel']) ? str_replace(',', '.', round($eSS->params['rel'], 2)) : str_replace(',', '.', 0.01);
 
     $eSS->Set('txt_original', $eSS->sanitarTag($_GET['search']), true);
-	$modx->setPlaceholder('stat_request', $eSS->Get('txt_original'));
+    $modx->setPlaceholder('stat_request', $eSS->Get('txt_original'));
     //echo '<br>'.$eSS->Get('txt_original').'<br>';
 
     $query = $eSS->makeSearchSQL();
@@ -40,15 +40,30 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     }
 
     if ($worker == 'DocLister') {
-        $eSS->params['parents'] = "0";
-        $eSS->params['depth'] = "7";
-        $eSS->params['showParent'] = "1";
+        $eSS->params['idType'] = 'parents';
+        $eSS->params['parents'] = '';
+        $eSS->params['ignoreEmpty'] = '1';
+
         $eSS->params['addWhereList'] = $query['addWhereList'];
         $eSS->params['selectFields'] = $query['selectFields'];
+
+
         $eSS->params['orderBy'] = $query['orderBy'];
         if ($eSS->params['extract'] == '1') {
-            $eSS->params['prepare'] = array($eSS, 'prepareExtractor');
+            include_once('evoSearchDLPrepare.class.php');
+            $eSS->params['bulk_words_stemmer'] = $eSS->bulk_words_stemmer;
+            $eSS->params['ext_content_field'] = $eSS->ext_content_field;
+
+            /**
+             * Получение prepare сниппетов из параметров BeforePrepare и AfterPrepare
+             * для совмещения с обязательным вызовом метода evoSearchDLPrepare::makeHighlight
+             */
+            $prepare = isset($eSS->params['BeforePrepare']) ? explode(",", $eSS->params['BeforePrepare']) : '';
+            $prepare[] = 'evoSearchDLPrepare::makeHighlight';
+            $prepare[] = isset($eSS->params['AfterPrepare']) ? $eSS->params['AfterPrepare'] : '';
+            $eSS->params['prepare'] = trim(implode(",", $prepare), ',');
         }
+
         $output .= $eSS->modx->runSnippet($worker, $eSS->params);
     } else if ($worker == 'Ditto') {
         $eSS->params['extenders'] = 'nosort';
@@ -60,15 +75,12 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
 
     if ($output == '' && $worker == 'DocLister' && $eSS->params['addSearch'] != '0') {
         $eSS->makeAddQueryForEmptyResult($bulk_words_original);
-        if ($eSS->params['extract'] == '1') {
-            $eSS->params['prepare'] = array($eSS, 'prepareExtractor');
-        }
+
         $output .= $eSS->modx->runSnippet($worker, $eSS->params);
     }
     if ($eSS->params['show_stat'] == '1'  && $worker == 'DocLister') {
         $output = $eSS->getSearchResultInfo() . $output;
     }
-
 }
 
-echo $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : '<div class="noResult">' . $eSS->parseNoresult($noResult) . '</div>');
+return $output != '' ? $output : (!isset($_REQUEST['search']) ? '' : '<div class="noResult">' . $eSS->parseNoresult($noResult) . '</div>');
