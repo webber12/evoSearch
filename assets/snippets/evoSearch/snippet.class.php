@@ -46,59 +46,6 @@ public function __construct($modx, $params, $min_length = 2, $ext_content_field 
     $this->stemmer = $this->getStemmer();
 }
 
-//функция для prepare-сниппета DocLister (готовим данные для плейсхолдера [+extract+] в чанк вывода результатов DocLister
-public function prepareExtractor($data) {
-    $data = $this->makeHighlight ($data);
-    return $data;
-}
-
-//делаем подсветку на основе стеммера
-public function makeHighlight ($data) {
-    if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
-        $input = implode('|', $this->bulk_words_stemmer);
-        $input = str_replace('\\', '', $input);
-        $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
-        $replacement = '<span class="evoSearch_highlight">$1$2</span>';
-        if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
-            $text = $this->getTextForHighlight($data[$this->ext_content_field]);
-        } else{
-            $text = $this->getTextForHighlight($data["content"]);
-        }
-        $pagetitle = $this->modx->stripTags($data["pagetitle"]);
-        $data["extract"] = preg_replace($pattern, $replacement, $text);
-        $data["pagetitle"] = preg_replace($pattern, $replacement, $pagetitle);
-    }
-    return $data;
-}
-
-//вырезаем нужный кусок текста нужной длины (примерно)
-private function getTextForHighlight($text) {
-    $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
-    $limit = $max_length + 12;
-    $text = $this->modx->stripTags($text);
-    $pos = array();
-    foreach ($this->bulk_words_stemmer as $word) {
-        $pos[$word] = mb_strripos(mb_strtolower($text, 'UTF-8'), $word, 0, 'UTF-8');
-    }
-    foreach ($pos as $word => $position) {
-        $length = mb_strlen($text, 'UTF-8');
-        if ($position == 0 && $length > $limit) {
-            $text = mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
-        } else if ($position < $max_length && $length > $limit) {
-            $text = ' ... ' . mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
-        } else if ($position + $limit >= $length && $length > $limit) {
-            $text = mb_substr($text, $position);
-        } else if ($length > $limit){
-            $text = ' ... ' . mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
-        } else {
-
-        }
-    }
-    return $text;
-}
-
-
-
 /**
  * Возвращает все словоформы слов поискового запроса
  *
@@ -118,11 +65,11 @@ public function Words2AllForms($text) {
         // Extend graminfo for getAllFormsWithGramInfo method call
         'with_gramtab' => false,
         // Enable prediction by suffix
-        'predict_by_suffix' => true, 
+        'predict_by_suffix' => true,
         // Enable prediction by prefix
         'predict_by_db' => true
     );
-    
+
     $words = $this->makeWordsFromText($text);
     $bulk_words = $this->makeBulkWords($words);
 
@@ -221,12 +168,12 @@ public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original =
     $this->params['documents'] = ''; //очищаем список документов, если там что-то было
     $this->params['addWhereList'] = 'c.searchable=1'; //условия поиска только среди доступных для поиска
     //$this->params['sortType'] = 'doclist'; - тут будем сортировать по умолчанию - по дате создания/публикации
-    
+
     //берем id всех документов сайта
     $q = $this->modx->db->query("SELECT id FROM " . $this->content_table . " WHERE `searchable`='1' AND `deleted`='0' AND `published`='1'");
     $documents = $this->makeStringFromQuery($q);
     $this->params['documents'] = $documents;
-    
+
     $s = implode(",", $bulk_words_original);
     if ($s != '') {//если в поиске есть хоть одно значимое слово, то будем искать
         $this->params['filters'] = 'OR(content:pagetitle:eq:' . $txt_original . ';content:pagetitle:like-r:' . $txt_original . ';content:pagetitle:like-l:' . $txt_original . ';content:pagetitle:like: ' . $txt_original . ' ;content:pagetitle:against:' . $txt_original . ';content:' . $this->ext_content_field . ',' . $this->ext_content_index_field . ':against:' . $txt_original . ')';
@@ -251,7 +198,7 @@ public function getSearchResultInfo() {
     }
     $this->setPlaceholders(
         array(
-            'stat_total' => $count, 
+            'stat_total' => $count,
             'stat_display' => $display,
             'stat_from' => $from,
             'stat_to' => $to
@@ -281,7 +228,7 @@ public function setPlaceholders($data = array()) {
 }
 
 public function parseNoresult($noResult) {
-	return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
+    return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
 }
 
 }//class end
