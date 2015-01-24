@@ -281,7 +281,7 @@ public function setPlaceholders($data = array()) {
 }
 
 public function parseNoresult($noResult) {
-	return $this->parseTpl(array('stat_request'), array($this->Get('txt_original')), $noResult);
+	return $this->parseTpl(array('[+stat_request=}'), array($this->Get('txt_original')), $noResult);
 }
 
 }//class end
