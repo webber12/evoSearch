@@ -1,5 +1,9 @@
 <?php
 
+if(file_exists(MODX_BASE_PATH.'assets/snippets/DocLister/lib/DLTemplate.class.php')){
+    include_once(MODX_BASE_PATH.'assets/snippets/DocLister/lib/DLTemplate.class.php');
+}
+
 class evoSearchSnippet {
 
 public $params = array();
@@ -191,7 +195,7 @@ public function getSearchResultInfo() {
     $to = $from - 1 + $display;
     if ($count && $count != '0' && $count != '') {
         $out .= $this->parseTpl(
-                     array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]'),
+                     array('stat_request', 'stat_total', 'stat_display', 'stat_from', 'stat_to'),
                      array($this->Get('txt_original'), $count, $display, $from, $to),
                      $this->params['statTpl']
                     );
@@ -208,7 +212,20 @@ public function getSearchResultInfo() {
 }
 
 public function parseTpl($arr1, $arr2, $tpl) {
-    return str_replace($arr1, $arr2, $tpl);
+    if(class_exists('DLTemplate')){
+        $tplObj = DLTemplate::getInstance($this->modx);
+        $html = $tplObj->getChunk($tpl);
+        if(empty($html)){
+            $html = $tpl;
+        }
+        $out = $tplObj->parseChunk('@CODE: '.$html, array_combine($arr1, $arr2));
+    }else{
+        foreach($arr1 as &$val){
+            $val = '[+'.$val.'+]';
+        }
+        $out = str_replace($arr1, $arr2, $tpl);
+    }
+    return $out;
 }
 
 public function sanitarTag($data) {
@@ -228,7 +245,7 @@ public function setPlaceholders($data = array()) {
 }
 
 public function parseNoresult($noResult) {
-    return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
+    return $this->parseTpl(array('stat_request'), array($this->Get('txt_original')), $noResult);
 }
 
 }//class end
