@@ -43,7 +43,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
         $eSS->params['parents'] = "0";
         $eSS->params['depth'] = "7";
         $eSS->params['showParent'] = "1";
-        $eSS->params['addWhereList'] = $query['addWhereList'];
+        $eSS->params['addWhereList'] = isset($eSS->params['addWhereList']) && !empty($eSS->params['addWhereList']) ? $eSS->params['addWhereList'] . ' AND ' . $query['addWhereList'] : $query['addWhereList'];
         $eSS->params['selectFields'] = $query['selectFields'];
         $eSS->params['orderBy'] = $query['orderBy'];
         if ($eSS->params['extract'] == '1') {
