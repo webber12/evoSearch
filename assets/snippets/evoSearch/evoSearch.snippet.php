@@ -63,6 +63,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
         if ($eSS->params['extract'] == '1') {
             $eSS->params['prepare'] = array($eSS, 'prepareExtractor');
         }
+        $eSS->params['addWhereList'] = isset($params['addWhereList']) && !empty($params['addWhereList']) ? $params['addWhereList'] . ' AND ' . $eSS->params['addWhereList'] : $eSS->params['addWhereList'];
         $output .= $eSS->modx->runSnippet($worker, $eSS->params);
     }
     if ($eSS->params['show_stat'] == '1'  && $worker == 'DocLister') {
