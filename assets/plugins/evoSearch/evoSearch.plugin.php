@@ -16,10 +16,14 @@ if ($e->name == 'OnDocFormSave') {
         $content = $eSP->modx->stripTags($content_original);
         $content = $eSP->injectTVs($row['id'], $content);
         $words = $eSP->Words2BaseForm(mb_strtoupper($content, 'UTF-8'));
+		$where = '';
+        $where .= ($this->params['excludeTmpls'] != '' ? ' template NOT IN(' . $this->params['excludeTmpls'] . ') ' : '');
+        $where .= ($this->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id NOT IN(' . $this->params['excludeIDs'] . ') ' : '');
+		$where = !empty($where) ? ' AND (' . $where . ')'; 
         $upd = $eSP->modx->db->update(
             array($eSP->ext_content_field => $eSP->modx->db->escape($content), $eSP->ext_content_index_field => $eSP->modx->db->escape($words)),
             $eSP->content_table,
-            'id=' . $row['id']
+            'id=' . $row['id'] . $where
             );
         //echo $words;
         //echo '<hr>';
