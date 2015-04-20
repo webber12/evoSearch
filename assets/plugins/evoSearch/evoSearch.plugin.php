@@ -12,9 +12,9 @@ if ($e->name == 'OnDocFormSave') {
     //echo $sql;die();
     $q = $eSP->modx->db->query($sql);
     $where = '';
-    $where .= ($eSP->params['excludeTmpls'] != '' ? ' template NOT IN(' . $eSP->params['excludeTmpls'] . ') ' : '');
-    $where .= ($eSP->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id NOT IN(' . $eSP->params['excludeIDs'] . ') ' : '');
-    $where = !empty($where) ? ' AND (' . $where . ')'; 
+    $where .= $eSP->params['excludeTmpls'] != '' ? ' template NOT IN(' . $eSP->params['excludeTmpls'] . ') ' : '';
+    $where .= $eSP->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id NOT IN(' . $eSP->params['excludeIDs'] . ') ' : '';
+    $where = !empty($where) ? ' AND (' . $where . ')' : ''; 
     while ($row = $eSP->modx->db->getRow($q)) {
         $content_original = $row['pagetitle'] . ' ' . $row['longtitle'] . ' ' . $row['description'] . ' ' . $row['introtext'] . ' ' . $row['content'];
         $content = $eSP->modx->stripTags($content_original);
