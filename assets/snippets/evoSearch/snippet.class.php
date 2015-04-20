@@ -254,7 +254,9 @@ public function getSearchResultInfo() {
             'stat_total' => $count, 
             'stat_display' => $display,
             'stat_from' => $from,
-            'stat_to' => $to
+            'stat_to' => $to,
+            'stat_tpl' => $out,
+            'stat_request' => $this->Get('txt_original')
         )
     );
     return $out;
