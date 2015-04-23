@@ -237,9 +237,10 @@ public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original =
 
 public function getSearchResultInfo() {
     $out = '';
-    $count = $this->modx->getPlaceholder('count');
-    $display = $this->modx->getPlaceholder('display');
-    $current = $this->modx->getPlaceholder('current');
+    $DL_id = isset($this->params['id']) && !empty($this->params['id']) ? $this->params['id'] . '.' : '';
+    $count = $this->modx->getPlaceholder($DL_id . 'count');
+    $display = $this->modx->getPlaceholder($DL_id . 'display');
+    $current = $this->modx->getPlaceholder($DL_id . 'current');
     $from = ($current - 1) * $this->params['display'] + 1;
     $to = $from - 1 + $display;
     if ($count && $count != '0' && $count != '') {
