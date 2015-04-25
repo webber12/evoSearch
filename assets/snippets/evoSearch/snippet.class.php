@@ -193,15 +193,16 @@ public function buildFulltextSQL ($txt_original = '', $txt_ext = '') {
     $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
     $tmp = array();
     $txt_ext = ($txt_ext == '' ? $this->Get('txt_ext') : $txt_ext);
+    $addLikeWhere = $this->makeAddLikeWhere ($txt_original);
     if ($txt_ext == '') {
         $tmp['sql'] = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') > " . $this->params['rel'] . " OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > " . $this->params['rel'] . ") ORDER BY rel DESC";
         $tmp['selectFields'] = "c.*, (MATCH(c.pagetitle) AGAINST('" . $txt_original . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "')) as rel";
-        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . "')> " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "') > " . $this->params['rel'] . ") OR (c.pagetitle LIKE '%" . $txt_original . "%' OR c." . $this->ext_content_index_field . " LIKE '%" . $txt_original . "%'))";
+        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . "')> " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "') > " . $this->params['rel'] . ") " . $addLikeWhere . ")";
         $tmp['orderBy'] = 'rel DESC';
     } else {
         $tmp['sql'] = "SELECT id, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') > " . $this->params['rel'] . " OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext."') > " . $this->params['rel'] . ") ORDER BY rel DESC";
         $tmp['selectFields'] = "c.*, (MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext . "')) as rel";
-        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') > " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext."') > " . $this->params['rel'] . ") OR (c.pagetitle LIKE '%" . $txt_original . "%' OR c." . $this->ext_content_index_field . " LIKE '%" . $txt_original . "%'))";
+        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') > " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext."') > " . $this->params['rel'] . ") " . $addLikeWhere . ")";
         $tmp['orderBy'] = 'rel DESC';
     }
     return $tmp;
@@ -284,7 +285,46 @@ public function setPlaceholders($data = array()) {
 }
 
 public function parseNoresult($noResult) {
-	return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
+    return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
+}
+
+public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $search_field = '') {
+    $out = '';
+    $search_field = $this->ext_content_field;
+    $min_length = $this->params['addLikeSearchLength'];
+    $tmp = array();
+    $inner_separator = 'OR';
+    if ($this->params['addLikeSearch'] == '1') {
+        switch ($this->params['addLikeSearchType']) {
+            case 'oneword' : //любое слово
+                $words = $this->makeWordsFromText($searchText);
+                foreach ($words as $word) {
+                    if (strlen(utf8_decode($word)) >= $min_length) {
+                        $tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                    }
+                }
+                break;
+            case 'allwords' : //все слова
+                $words = $this->makeWordsFromText($searchText);
+                foreach ($words as $word) {
+                    if (strlen(utf8_decode($word)) >= $min_length) {
+                        $tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                    }
+                }
+                $inner_separator = 'AND';
+                break;
+            default: //exact type - фраза полностью
+                $tmp[] = $search_field . " LIKE '%" . $searchText . "%' "
+                break;
+        }
+        if (!empty($tmp)) {
+            $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
+        }
+        if (!empty($out)) {
+            $out = ' ' . trim($main_separator) . ' (' . $out . ')'
+        }
+    }
+    return $out;
 }
 
 }//class end
