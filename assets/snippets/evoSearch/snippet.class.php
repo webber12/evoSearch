@@ -314,14 +314,14 @@ public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $sea
                 $inner_separator = 'AND';
                 break;
             default: //exact type - фраза полностью
-                $tmp[] = $search_field . " LIKE '%" . $searchText . "%' "
+                $tmp[] = $search_field . " LIKE '%" . $searchText . "%' ";
                 break;
         }
         if (!empty($tmp)) {
             $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
         }
         if (!empty($out)) {
-            $out = ' ' . trim($main_separator) . ' (' . $out . ')'
+            $out = ' ' . trim($main_separator) . ' (' . $out . ')';
         }
     }
     return $out;
