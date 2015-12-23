@@ -56,7 +56,7 @@ public function prepareExtractor($data) {
 public function makeHighlight ($data) {
     if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
         $input = implode('|', $this->bulk_words_stemmer);
-        $input = str_replace('\\', '', $input);
+        $input = str_replace(array('\\', '/'), array('', '\/'), $input);
         $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
         $replacement = '<span class="evoSearch_highlight">$1$2</span>';
         if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
