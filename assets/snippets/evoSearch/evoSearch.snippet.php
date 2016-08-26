@@ -43,7 +43,7 @@ if (isset($_GET['search']) && $_GET['search'] != '') {
     }
 
     if ($worker == 'DocLister') {
-        $eSS->params['parents'] = "0";
+        $eSS->params['parents'] = isset($eSS->params['parents']) ? $eSS->params['parents'] : "0";
         $eSS->params['depth'] = "7";
         $eSS->params['showParent'] = "1";
         $eSS->params['addWhereList'] = isset($eSS->params['addWhereList']) && !empty($eSS->params['addWhereList']) ? $eSS->params['addWhereList'] . ' AND ' . $query['addWhereList'] : $query['addWhereList'];
