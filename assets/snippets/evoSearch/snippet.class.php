@@ -294,6 +294,7 @@ public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $sea
     $min_length = $this->params['addLikeSearchLength'];
     $tmp = array();
     $inner_separator = 'OR';
+    $searchText = mb_strtolower($searchText, "UTF-8");
     if ($this->params['addLikeSearch'] == '1') {
         switch ($this->params['addLikeSearchType']) {
             case 'oneword' : //любое слово
