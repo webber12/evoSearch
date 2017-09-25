@@ -300,7 +300,8 @@ public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $sea
                 $words = $this->makeWordsFromText($searchText);
                 foreach ($words as $word) {
                     if (strlen(utf8_decode($word)) >= $min_length) {
-                        $tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                        //$tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
                     }
                 }
                 break;
@@ -308,13 +309,15 @@ public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $sea
                 $words = $this->makeWordsFromText($searchText);
                 foreach ($words as $word) {
                     if (strlen(utf8_decode($word)) >= $min_length) {
-                        $tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                        //$tmp[] = $search_field . " LIKE '%" . $word . "%' ";
+                        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
                     }
                 }
                 $inner_separator = 'AND';
                 break;
             default: //exact type - фраза полностью
-                $tmp[] = $search_field . " LIKE '%" . $searchText . "%' ";
+                //$tmp[] = $search_field . " LIKE '%" . $searchText . "%' ";
+                $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $searchText . "[[:>:]]'";
                 break;
         }
         if (!empty($tmp)) {
