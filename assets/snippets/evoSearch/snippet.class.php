@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 class evoSearchSnippet {
 
@@ -32,28 +32,119 @@ public $txt_ext_array = array();
 public $txt_ext = array();
 
 
-public function __construct($modx, $params, $min_length = 2, $ext_content_field = 'content_with_tv', $ext_content_index_field = 'content_with_tv_index') {
+public function __construct($modx, $params)
+{
     $this->modx = $modx;
     $this->params = $params;
-    $this->phpmorphy_dir = MODX_BASE_PATH . 'assets/libs/phpmorphy';
+    $this->search_field = isset($params['search_field']) ? $params['search_field'] : 'search';
+    $this->phpmorphy_dir = MODX_BASE_PATH . 'assets/lib/phpmorphy';
     $this->dict_dir = $this->phpmorphy_dir . '/dicts';
-    $this->min_length = $min_length;
     $this->dicts = array('rus', 'eng');
+    
+}
+
+public function init($min_length = 2, $ext_content_field = 'content_with_tv', $ext_content_index_field = 'content_with_tv_index')
+{
     $this->id = $this->params['id'];
     $this->content_table = $this->modx->getFullTableName("site_content");
+    $this->search_table = $this->modx->getFullTableName("evosearch_table");
     $this->ext_content_field = $ext_content_field;
     $this->ext_content_index_field = $ext_content_index_field;
+    $this->action = isset($this->params['action']) ? $params['action'] : '';
+    $this->setDefault(
+        array(
+            'display' => '20',
+            'show_stat' => '1',
+            'extract' => '1',
+            'statTpl' => '<div class="evoSearch_info">По запросу <b>[+stat_request+]</b> найдено всего <b>[+stat_total+]</b>. Показано <b>[+stat_display+]</b>, c [+stat_from+] по [+stat_to+]</div>',
+            'rel' => '0.01',
+            'min_length' => $min_length,
+            'dedug' => '0'
+            )
+    );
+    $this->min_length = $this->params['min_length'];
     $this->stemmer = $this->getStemmer();
 }
 
+public function setDefault($param, $default = '')
+{
+    if (is_array($param)) {
+        foreach ($param as $p => $v) {
+            $this->params[$p] = isset($this->params[$p]) ? $this->params[$p] : $v;
+        }
+    } else {
+        $this->params[$param] = isset($this->params[$param]) ? $this->params[$param] : $default;
+    }
+    return $this;
+}
+
+public function makeWordsFromText($text)
+{
+    $words = array();
+    $words = preg_replace('#\[.*\]#isU', '', $text);
+    $words = str_replace(array('&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;', '&mdash;'), array('', '', '', '', '', ''), $words);
+    $words = preg_split('#\s|[,.:;!?"\'()]#', $text, -1, PREG_SPLIT_NO_EMPTY);
+    return $words;
+}
+
+public function makeBulkWords($words, $upper = true)
+{
+    $bulk_words = array();
+    foreach ($words as $v) {
+        if (mb_strlen($v, "UTF-8") > $this->min_length) {
+            $bulk_words[] = $upper ? mb_strtoupper($v, "UTF-8") : $v;
+        }
+    }
+    return $bulk_words;
+}
+
+public function prepareWords()
+{
+    //string 
+    //оригинальный запрос, очищенный от тегов
+    $this->Set('txt_original', $this->sanitarTag($_GET[$this->search_field]), true);
+    $this->original = $this->Get('txt_original');
+    
+    //array()
+    //оригинальные слова из поиска длиннее min_length
+    $this->search_words = $this->makeWordsFromText($this->Get('txt_original'));
+    foreach ($this->search_words as $k => $word) {
+        if (mb_strlen($word, "UTF-8") <= $this->min_length) {
+            unset($this->search_words[$k]);
+        }
+    }
+    
+    //array()
+    //те же слова в верхнем регистре
+    $this->uppercase_search_words = $this->makeBulkWords($this->search_words);
+
+    //нормализованные слова в базовой форме
+    $this->baseform_search_words = array();
+    $tmp = $this->Words2BaseForm(implode(' ', $this->uppercase_search_words));
+    foreach ($tmp as $v) {
+        if (is_array($v)) {
+            foreach ($v as $v1) {
+                if ($v1 && !empty($v1) && $v1 != '') {
+                    $this->baseform_search_words[] = $v1;
+                }
+            }
+        } else {
+            if ($v && !empty($v) && $v != '') {
+                $this->baseform_search_words[] = $v;
+            }
+        }
+    }
+}
+
 //функция для prepare-сниппета DocLister (готовим данные для плейсхолдера [+extract+] в чанк вывода результатов DocLister
-public function prepareExtractor($data) {
+public function prepareExtractor($data)
+{
     $data = $this->makeHighlight ($data);
     return $data;
 }
-
 //делаем подсветку на основе стеммера
-public function makeHighlight ($data) {
+public function makeHighlight ($data)
+{
     if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
         $input = implode('|', $this->bulk_words_stemmer);
         $input = str_replace(array('\\', '/'), array('', '\/'), $input);
@@ -72,7 +163,8 @@ public function makeHighlight ($data) {
 }
 
 //вырезаем нужный кусок текста нужной длины (примерно)
-private function getTextForHighlight($text) {
+private function getTextForHighlight($text)
+{
     $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
     $limit = $max_length + 12;
     $text = $this->modx->stripTags($text);
@@ -97,15 +189,8 @@ private function getTextForHighlight($text) {
     return $text;
 }
 
-
-
-/**
- * Возвращает все словоформы слов поискового запроса
- *
- * @param string $text
- * @return array
- */
-public function Words2AllForms($text) {
+public function Words2BaseForm($text)
+{
     require_once($this->phpmorphy_dir . '/src/common.php');
 
     // set some options
@@ -132,36 +217,20 @@ public function Words2AllForms($text) {
         $dict_bundle = new phpMorphy_FilesBundle($this->dict_dir, $dict);
         // Create phpMorphy instance
         $morphy = new phpMorphy($dict_bundle, $opts);
-        $tmp = $morphy->getAllForms($bulk_words);
+        $tmp = $morphy->getBaseForm($bulk_words);
         $w = array_merge_recursive($w, $tmp);
     }
     return $w;
 }
 
-public function makeWordsFromText($text) {
-    $words = array();
-    $words = preg_replace('#\[.*\]#isU', '', $text);
-    $words = str_replace(array('&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;'), array('', '', '', '', ''), $words);
-    $words = preg_split('#\s|[,.:;!?"\'()]#', $text, -1, PREG_SPLIT_NO_EMPTY);
-    return $words;
-}
-
-public function makeBulkWords($words, $upper = true) {
-    $bulk_words = array();
-    foreach ($words as $v) {
-        if (strlen($v) > $this->min_length) {
-            $bulk_words[] = $upper ? strtoupper($v) : $v;
-        }
-    }
-    return $bulk_words;
-}
-
-public function getStemmer() {
+public function getStemmer()
+{
     include_once('stemmer.class.php');
     return $stemmer = new Lingua_Stem_Ru();
 }
 
-public function Set($key, $value, $escape = false) {
+public function Set($key, $value, $escape = false)
+{
     if ($escape) {
         $this->{$key} = $this->modx->db->escape($value);
     } else {
@@ -169,46 +238,87 @@ public function Set($key, $value, $escape = false) {
     }
 }
 
-public function Get($key, $default = '') {
+public function Get($key, $default = '')
+{
     return $this->{$key} ? $this->{$key} : $default ;
 }
 
-public function makeSearchSQL ($txt_original = '') {
-    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
-    $this->txt_ext_array = $this->Words2AllForms($txt_original);
-    $this->txt_ext = '';
-    foreach ($this->txt_ext_array as $v) {
-        if (is_array($v)) {
-            $this->txt_ext .= ' ' . implode(" ", $v);
-        } else {
-            $this->txt_ext .= ' ' . $v;
+public function makeSearch()
+{
+    //возвращаем id ресурсов, отобранные по полнотекстовому поиску и отсортированные по релевантности
+    $ids = array();
+    $sql = $this->makeSearchSQL();
+    //$sql2 = $this->makeSearchSQL('addlike');
+    if ($this->params['debug'] == '1') {
+        echo $sql . '<hr>';
+        //echo $sql2 . '<hr>';
+    }
+    if ($sql != '') {
+        $q = $this->modx->db->query($sql);
+        while ($row = $this->modx->db->getRow($q)) {
+            $ids[] = $row['docid'];
         }
     }
-    $query = $this->buildFulltextSQL ();
-    //print_r($sql);
-    return $query;
-}
-
-public function buildFulltextSQL ($txt_original = '', $txt_ext = '') {
-    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
-    $tmp = array();
-    $txt_ext = ($txt_ext == '' ? $this->Get('txt_ext') : $txt_ext);
-    $addLikeWhere = $this->makeAddLikeWhere ($txt_original);
-    if ($txt_ext == '') {
-        $tmp['sql'] = "SELECT id, IF(pagetitle='" . $txt_original . "', 1000000, (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "'))) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . "') > " . $this->params['rel'] . " OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . "') > " . $this->params['rel'] . ") ORDER BY rel DESC";
-        $tmp['selectFields'] = "c.*, IF(c.pagetitle='" . $txt_original . "', 1000000, (MATCH(c.pagetitle) AGAINST('" . $txt_original . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "'))) as rel";
-        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . "')> " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . "') > " . $this->params['rel'] . ") " . $addLikeWhere . ")";
-        $tmp['orderBy'] = 'rel DESC';
-    } else {
-        $tmp['sql'] = "SELECT id, IF(pagetitle='" . $txt_original . "', 1000000, (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext . "'))) as rel FROM " . $this->content_table . " WHERE `searchable`='1' AND (MATCH(`pagetitle`) AGAINST('" . $txt_original . " " . $txt_ext . "') > " . $this->params['rel'] . " OR MATCH (`" . $this->ext_content_field . "`, `" . $this->ext_content_index_field . "`) AGAINST ('" . $txt_original . " " . $txt_ext."') > " . $this->params['rel'] . ") ORDER BY rel DESC";
-        $tmp['selectFields'] = "c.*, IF(c.pagetitle='" . $txt_original . "', 1000000, (MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') * 5 + MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext . "'))) as rel";
-        $tmp['addWhereList'] = "c.searchable='1' AND ((MATCH(c.pagetitle) AGAINST('" . $txt_original . " " . $txt_ext . "') > " . $this->params['rel'] . " OR MATCH (c." . $this->ext_content_field . ", c." . $this->ext_content_index_field . ") AGAINST ('" . $txt_original . " " . $txt_ext."') > " . $this->params['rel'] . ") " . $addLikeWhere . ")";
-        $tmp['orderBy'] = 'rel DESC';
+    if ($this->params['debug'] == '1') {
+        echo 'найдены ' . implode(',', $ids) . '<hr>';
     }
-    return $tmp;
+    if (empty($ids)) {//ничего не найдено, возможно требуется дополнительный поиск по like
+        $sql = $this->makeSearchSQL('addlike');
+        if ($this->params['debug'] == '1') {
+            echo $sql . '<hr>';
+        }
+        if ($sql != '') {
+            $q = $this->modx->db->query($sql);
+            while ($row = $this->modx->db->getRow($q)) {
+                $ids[] = $row['docid'];
+            }
+        }
+        if ($this->params['debug'] == '1') {
+            echo 'найдены ' . implode(',', $ids) . '<hr>';
+        }
+    }
+    return $ids;
 }
 
-public function makeStringFromQuery ($q, $serapator = ',', $field = 'id') {
+public function makeSearchSQL($type = 'fulltext')
+{
+    switch ($type) {
+        case 'fulltext':
+            $sql = $this->buildFulltextSQL();
+            break;
+        case 'addlike':
+            $sql = $this->buildAddLikeSQL();
+        default:
+            break;
+    }
+    return $sql;
+}
+
+public function buildFulltextSQL()
+{
+    $sql = '';
+    if ($this->original != '' || !empty($this->baseform_search_words)) {
+        $txt_original = $this->original;
+        $search = $txt_original . ' ' . implode(' ', $this->baseform_search_words);
+        $sql = "SELECT docid, IF(`pagetitle` LIKE '%" . $txt_original . "%', 2, 0) as pt, IF(`" . $this->ext_content_field . "` LIKE '%" . $txt_original . "%', 1, 0) as ct, (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) as rel FROM " . $this->search_table . " WHERE IF(`pagetitle` LIKE '%" . $txt_original . "%', 2, 0)>0 OR IF(`" . $this->ext_content_field . "` LIKE '%" . $txt_original . "%', 1, 0)>0 OR (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) > " . $this->params['rel'] . " ORDER BY pt DESC, (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) DESC, ct DESC";
+    }
+    return $sql;
+}
+
+public function buildAddLikeSQL()
+{
+    //ищем вхождение всех слов в заголовок либо в поле content_with_tv
+    $sql = '';
+    $addPagetitle = $this->makeAddLikeCond('pagetitle', ' ');
+    $addContent = $this->makeAddLikeCond($this->ext_content_field, 'OR');
+    if ($addPagetitle != '' && $addContent != '') {
+        $sql = "SELECT docid, IF(" . $addPagetitle . ", 2,0) as rel FROM " . $this->search_table . " WHERE " . $addPagetitle . " " . $addContent . " ORDER BY rel DESC";
+    }
+    return $sql;
+} 
+
+public function makeStringFromQuery($q, $serapator = ',', $field = 'id')
+{
     $out = array();
     while ($row = $this->modx->db->getRow($q)) {
         $out[] = $row[$field];
@@ -216,27 +326,8 @@ public function makeStringFromQuery ($q, $serapator = ',', $field = 'id') {
     return implode($serapator, $out);
 }
 
-public function makeAddQueryForEmptyResult($bulk_words_original, $txt_original = '', $worker = 'DocLister') {
-    $output = '';
-    $txt_original = ($txt_original == '' ? $this->Get('txt_original') : $txt_original);
-    $this->params['documents'] = ''; //очищаем список документов, если там что-то было
-    $this->params['addWhereList'] = 'c.searchable=1'; //условия поиска только среди доступных для поиска
-    //$this->params['sortType'] = 'doclist'; - тут будем сортировать по умолчанию - по дате создания/публикации
-    
-    //берем id всех документов сайта
-    $q = $this->modx->db->query("SELECT id FROM " . $this->content_table . " WHERE `searchable`='1' AND `deleted`='0' AND `published`='1'");
-    $documents = $this->makeStringFromQuery($q);
-    $this->params['documents'] = $documents;
-    
-    $s = implode(",", $bulk_words_original);
-    if ($s != '') {//если в поиске есть хоть одно значимое слово, то будем искать
-        $this->params['filters'] = 'OR(content:pagetitle:eq:' . $txt_original . ';content:pagetitle:like-r:' . $txt_original . ';content:pagetitle:like-l:' . $txt_original . ';content:pagetitle:like: ' . $txt_original . ' ;content:pagetitle:against:' . $txt_original . ';content:' . $this->ext_content_field . ',' . $this->ext_content_index_field . ':against:' . $txt_original . ')';
-        //$output .= $this->modx->runSnippet($worker, $this->params);
-    }
-    //return $this->params;
-}
-
-public function getSearchResultInfo() {
+public function getSearchResultInfo()
+{
     $out = '';
     $DL_id = isset($this->params['id']) && !empty($this->params['id']) ? $this->params['id'] . '.' : '';
     $count = $this->modx->getPlaceholder($DL_id . 'count');
@@ -264,11 +355,13 @@ public function getSearchResultInfo() {
     return $out;
 }
 
-public function parseTpl($arr1, $arr2, $tpl) {
+public function parseTpl($arr1, $arr2, $tpl)
+{
     return str_replace($arr1, $arr2, $tpl);
 }
 
-public function sanitarTag($data) {
+public function sanitarTag($data)
+{
         return is_scalar($data) ? str_replace(
             array('[', '%5B', ']', '%5D', '{', '%7B', '}', '%7D'),
             array('&#91;', '&#91;', '&#93;', '&#93;', '&#123;', '&#123;', '&#125;', '&#125;'),
@@ -276,7 +369,8 @@ public function sanitarTag($data) {
         ) : '';
 }
 
-public function setPlaceholders($data = array()) {
+public function setPlaceholders($data = array())
+{
     if (is_array($data)) {
         foreach ($data as $name => $value) {
             $this->modx->setPlaceholder($name, $value);
@@ -284,49 +378,24 @@ public function setPlaceholders($data = array()) {
     }
 }
 
-public function parseNoresult($noResult) {
+public function parseNoresult($noResult)
+{
     return $this->parseTpl(array('[+stat_request+]'), array($this->Get('txt_original')), $noResult);
 }
 
-public function makeAddLikeWhere ($searchText = '', $main_separator = 'OR', $search_field = '') {
+
+public function makeAddLikeCond($search_field = 'pagetitle', $separator = 'AND', $inner_separator = 'AND')
+{
     $out = '';
-    $search_field = $this->ext_content_field;
-    $min_length = $this->params['addLikeSearchLength'];
-    $tmp = array();
-    $inner_separator = 'OR';
-    $searchText = mb_strtolower($searchText, "UTF-8");
-    if ($this->params['addLikeSearch'] == '1') {
-        switch ($this->params['addLikeSearchType']) {
-            case 'oneword' : //любое слово
-                $words = $this->makeWordsFromText($searchText);
-                foreach ($words as $word) {
-                    if (strlen(utf8_decode($word)) >= $min_length) {
-                        //$tmp[] = $search_field . " LIKE '%" . $word . "%' ";
-                        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
-                    }
-                }
-                break;
-            case 'allwords' : //все слова
-                $words = $this->makeWordsFromText($searchText);
-                foreach ($words as $word) {
-                    if (strlen(utf8_decode($word)) >= $min_length) {
-                        //$tmp[] = $search_field . " LIKE '%" . $word . "%' ";
-                        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
-                    }
-                }
-                $inner_separator = 'AND';
-                break;
-            default: //exact type - фраза полностью
-                //$tmp[] = $search_field . " LIKE '%" . $searchText . "%' ";
-                $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $searchText . "[[:>:]]'";
-                break;
-        }
-        if (!empty($tmp)) {
-            $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
-        }
-        if (!empty($out)) {
-            $out = ' ' . trim($main_separator) . ' (' . $out . ')';
-        }
+    foreach ($this->search_words as $word) {
+        $word = mb_strtolower($word, "UTF-8");
+        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
+    }
+    if (!empty($tmp)) {
+        $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
+    }
+    if (!empty($out)) {
+        $out = ' ' . $separator . ' (' . $out . ')';
     }
     return $out;
 }

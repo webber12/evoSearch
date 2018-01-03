@@ -10,25 +10,29 @@ if ($e->name == 'OnDocFormSave') {
     //теперь начинаем работу
     $sql = $eSP->makeSQLForSelectWords();
     //echo $sql;die();
-    $q = $eSP->modx->db->query($sql);
-    $where = '';
-    $where .= $eSP->params['excludeTmpls'] != '' ? ' template NOT IN(' . $eSP->params['excludeTmpls'] . ') ' : '';
-    $where .= $eSP->params['excludeIDs'] != '' ? ($where != '' ? ' OR ' : '') . ' id NOT IN(' . $eSP->params['excludeIDs'] . ') ' : '';
-    $where = !empty($where) ? ' AND (' . $where . ')' : ''; 
-    while ($row = $eSP->modx->db->getRow($q)) {
-        $content_original = $row['pagetitle'] . ' ' . $row['longtitle'] . ' ' . $row['description'] . ' ' . $row['introtext'] . ' ' . $row['content'];
-        $content = $eSP->modx->stripTags($content_original);
+    $q = $modx->db->query($sql);
+    $content_fields = explode(',', $eSP->cleanIn($eSP->search_fields));
+    while ($row = $modx->db->getRow($q)) {
+        $tmp = array();
+        foreach($content_fields as $k => $v) {
+            if (isset($row[$v]) && !empty($row[$v])) {
+                $tmp[] = $row[$v];
+            }
+        }
+        $content_original = implode(' ', $tmp);
+        $content = $modx->stripTags($content_original);
         $content = $eSP->injectTVs($row['id'], $content);
         $words = $eSP->Words2BaseForm(mb_strtoupper($content, 'UTF-8'));
-        $upd = $eSP->modx->db->update(
-            array($eSP->ext_content_field => $eSP->modx->db->escape($content), $eSP->ext_content_index_field => $eSP->modx->db->escape($words)),
-            $eSP->content_table,
-            'id=' . $row['id'] . $where
-            );
-        //echo $words;
-        //echo '<hr>';
+        $fields = array(
+            $eSP->ext_content_field => $modx->db->escape($content),
+            $eSP->ext_content_index_field => $modx->db->escape($words),
+            'docid' => $row['id'],
+            'pagetitle' => isset($row['pagetitle']) ? $modx->db->escape($row['pagetitle']) : '',
+            'table' => $eSP->content_table_name
+        );
+        $up = $eSP->updateSearchTable($fields);
         //die();
     }
-    //сбросим в пустоту поля индексов для исключенных шаблонов и ресурсов
+    //удалим строки индексов для исключенных шаблонов и ресурсов
     $eSP->emptyExcluded();
 }
