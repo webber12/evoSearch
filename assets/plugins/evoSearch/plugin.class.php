@@ -221,8 +221,8 @@ private function createSearchTable()
         ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
     ';
     $this->modx->db->query($sql);
-    $sql = "ALTER TABLE " . $this->content_table . " ADD FULLTEXT(`pagetitle`)";
-    $this->modx->db->query($sql);
+    //$sql = "ALTER TABLE " . $this->content_table . " ADD FULLTEXT(`pagetitle`)";
+    //$this->modx->db->query($sql);
 }
 
 public function prepareRun()
