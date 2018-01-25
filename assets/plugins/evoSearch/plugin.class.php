@@ -161,7 +161,8 @@ public function makeBulkWords($words, $upper = true)
     $bulk_words = array();
     foreach ($words as $v) {
         if (strlen($v) > $this->min_length) {
-            $bulk_words[] = $upper ? strtoupper($v) : $v;
+            //$bulk_words[] = $upper ? strtoupper($v) : $v;
+            $bulk_words[] = $v;
         }
     }
     return $bulk_words;
