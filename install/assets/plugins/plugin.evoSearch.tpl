@@ -11,6 +11,7 @@
  * @internal    @properties &offset=Первая строка переиндексации;text;0 &rowsperonce=Строк за сеанс индексировать;text;1 &reindex=Переиндексировать все;text;0 &excludeTmpls=Исключить шаблоны;text; &excludeIDs=Исключить ID ресурсов;text; &TvNames=Имена TV для поиска;textarea; &unpublished=Индексировать неопубликованные;text;0 &deleted=Индексировать удаленные;text;0 &dicts=Использовать словари;text;rus,eng
  * @internal    @installset base, sample
  * @internal    @modx_category Search
+ * @internal    @disabled 1
  */
  
 /**
