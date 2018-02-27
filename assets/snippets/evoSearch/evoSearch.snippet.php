@@ -20,7 +20,9 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
 
     if ($eSS->action == 'ids') {//работаем в режиме ids - сразу возвращаем ids
         $modx->setPlaceholder("evoSearchIDs", $ids);
-        $output = implode(',', $ids);
+        if ($eSS->params['output'] && $eSS->params['output'] == '1') {
+            $output = implode(',', $ids);
+        }
     } else {//работаем в полном режиме, возвращаем вместе с выводом результатов
         if (!empty($ids)) {
             $eSS->bulk_words_stemmer = array();

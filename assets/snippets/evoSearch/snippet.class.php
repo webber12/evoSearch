@@ -50,7 +50,7 @@ public function init($min_length = 2, $ext_content_field = 'content_with_tv', $e
     $this->search_table = $this->modx->getFullTableName("evosearch_table");
     $this->ext_content_field = $ext_content_field;
     $this->ext_content_index_field = $ext_content_index_field;
-    $this->action = isset($this->params['action']) ? $params['action'] : '';
+    $this->action = isset($this->params['action']) ? $this->params['action'] : '';
     $this->setDefault(
         array(
             'display' => '20',
@@ -64,6 +64,7 @@ public function init($min_length = 2, $ext_content_field = 'content_with_tv', $e
     );
     $this->min_length = $this->params['min_length'];
     $this->stemmer = $this->getStemmer();
+    return $this;
 }
 
 public function setDefault($param, $default = '')
