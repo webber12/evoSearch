@@ -17,9 +17,8 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
 
     //получаем массив подходящих под условие поиска id
     $ids = $eSS->makeSearch();
-
+    $ids[] = 120000000;
     if ($eSS->action == 'ids') {//работаем в режиме ids - сразу возвращаем ids
-        $ids[] = 12000000;
         $modx->setPlaceholder("evoSearchIDs", $ids);
         if ($eSS->params['output'] && $eSS->params['output'] == '1') {
             $output = implode(',', $ids);
