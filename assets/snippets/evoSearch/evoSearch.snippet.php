@@ -35,6 +35,10 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
                 'showParent' => '1',
                 'addWhereList' => 'c.searchable=1' . (isset($params['addWhereList']) ? ' AND ' . $params['addWhereList'] : '')
             );
+            if (isset($params['parents'])) {
+                $DLparams['addWhereList'] .= ' AND c.id IN (' . $DLparams['documents'] . ') ';
+                unset($DLparams['documents']);
+            }
             if ($eSS->params['extract'] == '1' && (!isset($params['prepare']) || $params['prepare'] == '')) {
                 $DLparams['prepare'] = array($eSS, 'prepareExtractor');
             }
