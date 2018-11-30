@@ -196,6 +196,10 @@ public function injectTVs($id, $content)
         }
     }
     $content .= !empty($tvs) ? ' ' . implode(' ', $tvs) . ' ' : '';
+    $prepare = $this->invokePrepare(array('id' => $id, 'content' => $content, 'event' => 'OnAfterInjectTVs'));
+    if ($prepare && is_array($prepare) && isset($prepare['content'])) {
+        $content = $prepare['content'];
+    }
     return $content;
 }
 
@@ -241,6 +245,29 @@ public function updateSearchTable($fields)
         $up = $this->modx->db->query($sql);
     }
     return $up;
+}
+
+public function invokePrepare($data)
+{
+    $out = false;
+    if (isset($this->params['prepare']) && !empty(trim($this->params['prepare']))) {
+        $prepare = trim($this->params['prepare']);
+        if (strpos($prepare, '->') > 0) {
+            //вариант className->classMethod
+            $prepare = explode('->', $prepare, 2);
+        }
+        switch (true) {
+            case is_callable($prepare):
+                $out = call_user_func($prepare, $data);
+                break;
+            case is_scalar($prepare):
+                $out = $this->modx->runSnippet($prepare, array('data' => $data));
+                break;
+            default:
+                break;
+        }
+    }
+    return ($out && !empty($out)) ? $out : false;
 }
 
 }
