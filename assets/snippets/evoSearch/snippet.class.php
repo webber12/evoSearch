@@ -45,7 +45,7 @@ public function __construct($modx, $params)
 
 public function init($min_length = 2, $ext_content_field = 'content_with_tv', $ext_content_index_field = 'content_with_tv_index')
 {
-    $this->id = $this->params['id'];
+    $this->id = isset($this->params['id']) ? $this->params['id'] : 0;
     $this->content_table = $this->modx->getFullTableName("site_content");
     $this->search_table = $this->modx->getFullTableName("evosearch_table");
     $this->ext_content_field = $ext_content_field;
