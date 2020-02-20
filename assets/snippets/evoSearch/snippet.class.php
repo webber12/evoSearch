@@ -331,12 +331,14 @@ public function getSearchResultInfo()
 {
     $out = '';
     $DL_id = isset($this->params['id']) && !empty($this->params['id']) ? $this->params['id'] . '.' : '';
-    $count = $this->modx->getPlaceholder($DL_id . 'count');
-    $display = $this->modx->getPlaceholder($DL_id . 'display');
-    $current = $this->modx->getPlaceholder($DL_id . 'current');
-    $from = ($current - 1) * $this->params['display'] + 1;
-    $to = $from - 1 + $display;
-    if ($count && $count != '0' && $count != '') {
+    $count = (int)$this->modx->getPlaceholder($DL_id . 'count');
+    $display = (int)$this->modx->getPlaceholder($DL_id . 'display');
+    $current = (int)$this->modx->getPlaceholder($DL_id . 'current');
+    if (!$current) $current = 1;
+    $from = $to = 0;
+    if ($count > 0) {
+        $from = ($current - 1) * $this->params['display'] + 1;
+        $to = $from - 1 + $display;
         $out .= $this->parseTpl(
                      array('[+stat_request+]', '[+stat_total+]', '[+stat_display+]', '[+stat_from+]', '[+stat_to+]'),
                      array($this->Get('txt_original'), $count, $display, $from, $to),
