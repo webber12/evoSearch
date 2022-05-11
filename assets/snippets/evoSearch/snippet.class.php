@@ -80,11 +80,16 @@ class evoSearchSnippet
 
     public function makeWordsFromText($text)
     {
-        $words = array();
-        $words = preg_replace('#\[.*\]#isU', '', $text);
-        $words = str_replace(array('&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;', '&mdash;'), array('', '', '', '', '', ''), $words);
-        $words = preg_split('#\s|[,.:;!?"\'()]#', $text, -1, PREG_SPLIT_NO_EMPTY);
-        return $words;
+        return preg_split(
+            '#\s|[,.:;!?"\'()]#',
+            str_replace(
+                ['&ndash;', '&raquo;', '&laquo;', '&darr;', '&rarr;', '&mdash;'],
+                ['', '', '', '', '', ''],
+                preg_replace('#\[.*]#isU', '', $text)
+            ),
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        );
     }
 
     public function makeBulkWords($words, $upper = true)
