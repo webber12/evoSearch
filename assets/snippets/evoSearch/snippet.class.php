@@ -31,6 +31,8 @@ class evoSearchSnippet
     //словоформы всех слов из поисковой строки, строка. Слова разделены пробелами. Основной текст для организации полнотекстового поиска
     public $txt_ext = array();
 
+    public $search_words;
+
 
     public function __construct($modx, $params)
     {
@@ -50,17 +52,15 @@ class evoSearchSnippet
         $this->ext_content_field = $ext_content_field;
         $this->ext_content_index_field = $ext_content_index_field;
         $this->action = isset($this->params['action']) ? $this->params['action'] : '';
-        $this->setDefault(
-            array(
-                'display' => '20',
-                'show_stat' => '1',
-                'extract' => '1',
-                'statTpl' => '<div class="evoSearch_info">По запросу <b>[+stat_request+]</b> найдено всего <b>[+stat_total+]</b>. Показано <b>[+stat_display+]</b>, c [+stat_from+] по [+stat_to+]</div>',
-                'rel' => '0.01',
-                'min_length' => $min_length,
-                'dedug' => '0'
-            )
-        );
+        $this->setDefault([
+            'display' => '20',
+            'show_stat' => '1',
+            'extract' => '1',
+            'statTpl' => '<div class="evoSearch_info">По запросу <b>[+stat_request+]</b> найдено всего <b>[+stat_total+]</b>. Показано <b>[+stat_display+]</b>, c [+stat_from+] по [+stat_to+]</div>',
+            'rel' => '0.01',
+            'min_length' => $min_length,
+            'dedug' => '0'
+        ]);
         $this->min_length = $this->params['min_length'];
         $this->stemmer = $this->getStemmer();
         return $this;
@@ -68,12 +68,12 @@ class evoSearchSnippet
 
     public function setDefault($param, $default = '')
     {
-        if (is_array($param)) {
-            foreach ($param as $p => $v) {
-                $this->params[$p] = isset($this->params[$p]) ? $this->params[$p] : $v;
-            }
-        } else {
-            $this->params[$param] = isset($this->params[$param]) ? $this->params[$param] : $default;
+        if (!is_array($param)) {
+            $this->params[$param] = !isset($this->params[$param]) ? $default : $this->params[$param];
+            return $this;
+        }
+        foreach ($param as $p => $v) {
+            $this->params[$p] = isset($this->params[$p]) ? $this->params[$p] : $v;
         }
         return $this;
     }
@@ -94,10 +94,10 @@ class evoSearchSnippet
 
     public function makeBulkWords($words, $upper = true)
     {
-        $bulk_words = array();
+        $bulk_words = [];
         foreach ($words as $v) {
-            if (mb_strlen($v, "UTF-8") > $this->min_length) {
-                $bulk_words[] = $upper ? mb_strtoupper($v, "UTF-8") : $v;
+            if (mb_strlen($v, 'UTF-8') > $this->min_length) {
+                $bulk_words[] = $upper ? mb_strtoupper($v, 'UTF-8') : $v;
             }
         }
         return $bulk_words;
@@ -133,10 +133,10 @@ class evoSearchSnippet
                         $this->baseform_search_words[] = $v1;
                     }
                 }
-            } else {
-                if ($v && !empty($v) && $v != '') {
-                    $this->baseform_search_words[] = $v;
-                }
+                continue;
+            }
+            if (!empty($v)) {
+                $this->baseform_search_words[] = $v;
             }
         }
     }
@@ -150,34 +150,39 @@ class evoSearchSnippet
     //делаем подсветку на основе стеммера
     public function makeHighlight($data)
     {
-        if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
-            $input = implode('|', $this->bulk_words_stemmer);
-            $input = str_replace(array('\\', '/'), array('', '\/'), $input);
-            $pattern = '/(' . $input . ')([^\.\s\;\:"\'\(\)!?,]*)?/ius';
-            $replacement = '<span class="evoSearch_highlight">$1$2</span>';
-            if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
-                $text = $this->getTextForHighlight($data[$this->ext_content_field]);
-            } else {
-                $text = $this->getTextForHighlight($data["content"]);
-            }
-            $pagetitle = $this->modx->stripTags($data["pagetitle"]);
-            $data["extract"] = preg_replace($pattern, $replacement, $text);
-            $data["pagetitle"] = preg_replace($pattern, $replacement, $pagetitle);
+        if (!is_array($this->bulk_words_stemmer) || empty($this->bulk_words_stemmer)) {
+            return $data;
         }
+        $input = implode('|', $this->bulk_words_stemmer);
+        $input = str_replace(array('\\', '/'), array('', '\/'), $input);
+        $pattern = '/(' . $input . ')([^.\s;:"\'()!?,]*)?/ius';
+        $replacement = '<span class="evoSearch_highlight">$1$2</span>';
+        if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
+            $text = $this->getTextForHighlight($data[$this->ext_content_field]);
+        } else {
+            $text = $this->getTextForHighlight($data["content"]);
+        }
+        $pagetitle = $this->modx->stripTags($data["pagetitle"]);
+        $data['extract'] = preg_replace($pattern, $replacement, $text);
+        $data['pagetitle'] = preg_replace($pattern, $replacement, $pagetitle);
         return $data;
     }
 
     //вырезаем нужный кусок текста нужной длины (примерно)
     private function getTextForHighlight($text)
     {
-        $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
+        if (!isset($this->params['maxlength']) || (int)$this->params['maxlength'] == 0) {
+            $max_length = 350;
+        } else {
+            $max_length = (int)$this->params['maxlength'];
+        }
         $limit = $max_length + 12;
         $text = $this->modx->stripTags($text);
         $pos = array();
         foreach ($this->bulk_words_stemmer as $word) {
             $pos[$word] = mb_strripos(mb_strtolower($text, 'UTF-8'), $word, 0, 'UTF-8');
         }
-        foreach ($pos as $word => $position) {
+        foreach ($pos as $position) {
             $length = mb_strlen($text, 'UTF-8');
             if ($position == 0 && $length > $limit) {
                 $text = mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
@@ -187,7 +192,6 @@ class evoSearchSnippet
                 $text = mb_substr($text, $position);
             } elseif ($length > $limit) {
                 $text = ' ... ' . mb_substr($text, $position, $max_length, 'UTF-8') . ' ... ';
-            } else {
             }
         }
         return $text;
@@ -198,7 +202,7 @@ class evoSearchSnippet
         require_once($this->phpmorphy_dir . '/src/common.php');
 
         // set some options
-        $opts = array(
+        $opts = [
             // storage type, follow types supported
             // PHPMORPHY_STORAGE_FILE - use file operations(fread, fseek) for dictionary access, this is very slow...
             // PHPMORPHY_STORAGE_SHM - load dictionary in shared memory(using shmop php extension), this is preferred mode
@@ -210,7 +214,7 @@ class evoSearchSnippet
             'predict_by_suffix' => true,
             // Enable prediction by prefix
             'predict_by_db' => true
-        );
+        ];
 
         $words = $this->makeWordsFromText($text);
         $bulk_words = $this->makeBulkWords($words);
@@ -230,21 +234,21 @@ class evoSearchSnippet
     public function getStemmer()
     {
         include_once('stemmer.class.php');
-        return $stemmer = new Lingua_Stem_Ru();
+        return new Lingua_Stem_Ru();
     }
 
     public function Set($key, $value, $escape = false)
     {
-        if ($escape) {
-            $this->{$key} = $this->modx->db->escape($value);
-        } else {
+        if (!$escape) {
             $this->{$key} = $value;
+        } else {
+            $this->{$key} = $this->modx->db->escape($value);
         }
     }
 
     public function Get($key, $default = '')
     {
-        return $this->{$key} ? $this->{$key} : $default;
+        return $this->{$key} ?: $default;
     }
 
     public function makeSearch()
@@ -263,23 +267,26 @@ class evoSearchSnippet
                 $ids[] = $row['docid'];
             }
         }
-        if ($this->params['debug'] == '1') {
+        if ($this->params['debug'] == 1) {
             echo 'найдены ' . implode(',', $ids) . '<hr>';
         }
-        if (empty($ids)) { //ничего не найдено, возможно требуется дополнительный поиск по like
-            $sql = $this->makeSearchSQL('addlike');
-            if ($this->params['debug'] == '1') {
-                echo $sql . '<hr>';
+        if (!empty($ids)) {
+            return $ids;
+        }
+
+        //ничего не найдено, возможно требуется дополнительный поиск по like
+        $sql = $this->makeSearchSQL('addlike');
+        if ($this->params['debug'] == '1') {
+            echo $sql . '<hr>';
+        }
+        if ($sql != '') {
+            $q = $this->modx->db->query($sql);
+            while ($row = $this->modx->db->getRow($q)) {
+                $ids[] = $row['docid'];
             }
-            if ($sql != '') {
-                $q = $this->modx->db->query($sql);
-                while ($row = $this->modx->db->getRow($q)) {
-                    $ids[] = $row['docid'];
-                }
-            }
-            if ($this->params['debug'] == '1') {
-                echo 'найдены ' . implode(',', $ids) . '<hr>';
-            }
+        }
+        if ($this->params['debug'] == '1') {
+            echo 'найдены ' . implode(',', $ids) . '<hr>';
         }
         return $ids;
     }
@@ -300,25 +307,49 @@ class evoSearchSnippet
 
     public function buildFulltextSQL()
     {
-        $sql = '';
-        if ($this->original != '' || !empty($this->baseform_search_words)) {
-            $txt_original = $this->original;
-            $search = $txt_original . ' ' . implode(' ', $this->baseform_search_words);
-            $sql = "SELECT docid, IF(`pagetitle` LIKE '%" . $txt_original . "%', 2, 0) as pt, IF(`" . $this->ext_content_field . "` LIKE '%" . $txt_original . "%', 1, 0) as ct, (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) as rel FROM " . $this->search_table . " WHERE IF(`pagetitle` LIKE '%" . $txt_original . "%', 2, 0)>0 OR IF(`" . $this->ext_content_field . "` LIKE '%" . $txt_original . "%', 1, 0)>0 OR (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) > " . $this->params['rel'] . " ORDER BY pt DESC, (MATCH(" . $this->ext_content_field . "," . $this->ext_content_index_field . ") AGAINST('" . $search . "')) DESC, ct DESC";
+        if ($this->original == '' && empty($this->baseform_search_words)) {
+            return '';
         }
-        return $sql;
+
+        $search = $this->original . ' ' . implode(' ', $this->baseform_search_words);
+        return sprintf(
+            "SELECT docid, IF(`pagetitle` LIKE '%%%s%%', 2, 0) as pt, IF(`%s` LIKE '%%%s%%', 1, 0) as ct, (MATCH(%s,%s) AGAINST('%s')) as rel FROM %s WHERE IF(`pagetitle` LIKE '%%%s%%', 2, 0)>0 OR IF(`%s` LIKE '%%%s%%', 1, 0)>0 OR (MATCH(%s,%s) AGAINST('%s')) > %s ORDER BY pt DESC, (MATCH(%s,%s) AGAINST('%s')) DESC, ct DESC",
+            $this->original,
+            $this->ext_content_field,
+            $this->original,
+            $this->ext_content_field,
+            $this->ext_content_index_field,
+            $search,
+            $this->search_table,
+            $this->original,
+            $this->ext_content_field,
+            $this->original,
+            $this->ext_content_field,
+            $this->ext_content_index_field,
+            $search,
+            $this->params['rel'],
+            $this->ext_content_field,
+            $this->ext_content_index_field,
+            $search
+        );
     }
 
     public function buildAddLikeSQL()
     {
         //ищем вхождение всех слов в заголовок либо в поле content_with_tv
-        $sql = '';
         $addPagetitle = $this->makeAddLikeCond('pagetitle', ' ');
         $addContent = $this->makeAddLikeCond($this->ext_content_field, 'OR');
-        if ($addPagetitle != '' && $addContent != '') {
-            $sql = "SELECT docid, IF(" . $addPagetitle . ", 2,0) as rel FROM " . $this->search_table . " WHERE " . $addPagetitle . " " . $addContent . " ORDER BY rel DESC";
+        if ($addPagetitle == '' || $addContent == '') {
+            return null;
         }
-        return $sql;
+
+        return sprintf(
+            "SELECT docid, IF(%s, 2,0) as rel FROM %s WHERE %s %s ORDER BY rel DESC",
+            $addPagetitle,
+            $this->search_table,
+            $addPagetitle,
+            $addContent
+        );
     }
 
     public function makeStringFromQuery($q, $serapator = ',', $field = 'id')
@@ -377,10 +408,11 @@ class evoSearchSnippet
 
     public function setPlaceholders($data = array())
     {
-        if (is_array($data)) {
-            foreach ($data as $name => $value) {
-                $this->modx->setPlaceholder($name, $value);
-            }
+        if (!is_array($data)) {
+            return;
+        }
+        foreach ($data as $name => $value) {
+            $this->modx->setPlaceholder($name, $value);
         }
     }
 
@@ -392,17 +424,18 @@ class evoSearchSnippet
 
     public function makeAddLikeCond($search_field = 'pagetitle', $separator = 'AND', $inner_separator = 'AND')
     {
-        $out = '';
+        if (!$this->search_words) {
+            return '';
+        }
+        
         foreach ($this->search_words as $word) {
             $word = mb_strtolower($word, "UTF-8");
             $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
         }
-        if (!empty($tmp)) {
-            $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
-        }
-        if (!empty($out)) {
-            $out = ' ' . $separator . ' (' . $out . ')';
-        }
-        return $out;
+        return sprintf(
+            ' %s (%s)',
+            $separator,
+            implode(' ' . trim($inner_separator) . ' ', $tmp)
+        );
     }
 }
