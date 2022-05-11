@@ -1,13 +1,27 @@
 <?php
-if(!defined('MODX_BASE_PATH')) die('What are you doing? Get out of here!');
+/**
+ * @var object $modx
+ */
+
+if(!defined('MODX_BASE_PATH')) {
+    die('What are you doing? Get out of here!');
+}
 
 $documents = '';
 $output = '';
-$noResult = isset($params['noResult']) ? $params['noResult'] : 'По запросу <u>[+stat_request+]</u> ничего не найдено. Смягчите условия поиска';
+if (!isset($params['noResult'])) {
+    $noResult = 'По запросу <u>[+stat_request+]</u> ничего не найдено. Смягчите условия поиска';
+} else {
+    $noResult = $params['noResult'];
+}
 $txt_original = '';
 
 include_once('snippet.class.php');
-$min_length = (isset($params['minlength']) && (int)$params['minlength'] > 0) ? (int)$params['minlength'] : 2;
+if (!isset($params['minlength']) || (int)$params['minlength'] <= 0) {
+    $min_length = 2;
+} else {
+    $min_length = (int)$params['minlength'];
+}
 $eSS = new evoSearchSnippet($modx, $params, $min_length);
 
 if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
@@ -18,7 +32,7 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
     //получаем массив подходящих под условие поиска id
     $ids = $eSS->makeSearch();
     $ids[] = 4294967295;
-    if ($eSS->action == 'ids') {//работаем в режиме ids - сразу возвращаем ids
+    if ($eSS->action === 'ids') {//работаем в режиме ids - сразу возвращаем ids
         $modx->setPlaceholder("evoSearchIDs", $ids);
         if ($eSS->params['output'] && $eSS->params['output'] == '1') {
             $output = implode(',', $ids);
@@ -44,11 +58,15 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
             }
             $params = array_merge($params, $DLparams);
             $output .= $modx->runSnippet("DocLister", $params);
-            if ($eSS->params['show_stat'] == '1') {
+            if ($eSS->params['show_stat'] == 1) {
                 $output = $eSS->getSearchResultInfo() . $output;
             }
         }
-        $output = $output != '' ? $output : (!isset($_REQUEST[$eSS->search_field]) ? '' : '<div class="noResult">' . $eSS->parseNoresult($noResult) . '</div>');
+        if ($output == '') {
+            if (isset($_REQUEST[$eSS->search_field])) {
+                $output = '<div class="noResult">' . $eSS->parseNoresult($noResult) . '</div>';
+            }
+        }
     }
 }
 return $output;
