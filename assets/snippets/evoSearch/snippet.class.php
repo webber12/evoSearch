@@ -427,7 +427,7 @@ class evoSearchSnippet
         if (!$this->search_words) {
             return '';
         }
-        
+
         foreach ($this->search_words as $word) {
             $word = mb_strtolower($word, "UTF-8");
             $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
