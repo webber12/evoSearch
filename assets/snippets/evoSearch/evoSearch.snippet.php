@@ -43,8 +43,8 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
                 $DLparams['prepare'] = array($eSS, 'prepareExtractor');
             }
             $params = array_merge($params, $DLparams);
-            $output .= $modx->runSnippet("DocLister", $params);
-            if ($eSS->params['show_stat'] == '1') {
+            $output = $modx->runSnippet("DocLister", $params);
+            if ($eSS->params['show_stat'] == '1' && !empty($output)) {
                 $output = $eSS->getSearchResultInfo() . $output;
             }
         }
