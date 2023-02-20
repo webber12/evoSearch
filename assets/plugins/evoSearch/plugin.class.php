@@ -117,10 +117,10 @@ public function makeSQLForSelectWords ()
         $where = '';
         $limit = ' LIMIT ' . (isset($this->params['offset']) ? (int)$this->params['offset'] : 0) . ',' . (isset($this->params['rowsperonce']) ? (int)$this->params['rowsperonce'] : 1);
     }
-    $where .= ($this->params['unpublished'] == '0' ? ' AND published=1 ' : '');
-    $where .= ($this->params['deleted'] == '0' ? ' AND deleted=0 ' : '');
-    $where .= ($this->params['excludeTmpls'] != '' ? ' AND template NOT IN(' . $this->params['excludeTmpls'] . ') ' : '');
-    $where .= ($this->params['excludeIDs'] != '' ? ' AND id NOT IN(' . $this->params['excludeIDs'] . ') ' : '');
+    $where .= $this->params['unpublished'] == '0' ? ' AND published=1 ' : '';
+    $where .= $this->params['deleted'] == '0' ? ' AND deleted=0 ' : '';
+    $where .= !empty($this->params['excludeTmpls']) ? ' AND template NOT IN(' . $this->params['excludeTmpls'] . ') ' : '';
+    $where .= !empty($this->params['excludeIDs']) ? ' AND id NOT IN(' . $this->params['excludeIDs'] . ') ' : '';
     $sql = "SELECT id," . $this->search_fields . " FROM " . $this->content_table . " WHERE searchable = 1" . $where . $order . $limit;
     return $sql;
 }
@@ -171,7 +171,7 @@ public function makeBulkWords($words, $upper = true)
 public function injectTVs($id, $content)
 {
     $tvs = array();
-    if ($this->params['TvNames'] != '') {
+    if (!empty($this->params['TvNames'])) {
         $TvNames = explode(',', $this->params['TvNames']);
         $TvValues = $this->modx->getTemplateVarOutput($TvNames, $id);
         $TvElements = $this->modx->getTemplateVars($TvNames, 'name,elements', $id, 'all');
