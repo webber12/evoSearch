@@ -164,7 +164,7 @@ public function makeHighlight ($data)
 }
 
 //вырезаем нужный кусок текста нужной длины (примерно)
-private function getTextForHighlight($text)
+protected function getTextForHighlight($text)
 {
     $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
     $limit = $max_length + 12;
