@@ -392,7 +392,7 @@ public function makeAddLikeCond($search_field = 'pagetitle', $separator = 'AND',
     $out = '';
     foreach ($this->search_words as $word) {
         $word = mb_strtolower($word, "UTF-8");
-        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
+        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '\\\\b" . $word . "\\\\b'";
     }
     if (!empty($tmp)) {
         $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
