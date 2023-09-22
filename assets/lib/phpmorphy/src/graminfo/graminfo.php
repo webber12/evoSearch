@@ -292,6 +292,7 @@ class phpMorphy_GramInfo_Proxy_WithHeader extends phpMorphy_GramInfo_Proxy {
 class phpMorphy_GramInfo_RuntimeCaching extends phpMorphy_GramInfo_Decorator {
     protected
         $flexia = array(),
+        $flexia_all = [],
         $ancodes = array();
 
     function readFlexiaData($info) {
