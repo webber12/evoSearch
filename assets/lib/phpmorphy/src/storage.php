@@ -65,12 +65,14 @@ class phpMorphy_Storage_Proxy extends phpMorphy_Storage {
     protected
         $file_name,
         $type,
-        $factory;
+        $factory,
+        $__obj;
         
     function __construct($type, $fileName, $factory) {
         $this->file_name = $fileName;
         $this->type = $type;
         $this->factory = $factory;
+        $this->__obj = $this->factory->open($this->type, $this->file_name, false);
     }
     
     function getFileName() { return $this->__obj->getFileName(); }

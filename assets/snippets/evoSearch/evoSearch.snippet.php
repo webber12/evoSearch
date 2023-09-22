@@ -25,10 +25,6 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
         }
     } else {//работаем в полном режиме, возвращаем вместе с выводом результатов
         if (!empty($ids)) {
-            $eSS->bulk_words_stemmer = array();
-            foreach ($eSS->search_words as $v) {
-                $eSS->bulk_words_stemmer[] = $eSS->stemmer->stem_word($v);
-            }
             $DLparams = array(
                 'documents' => implode(',', $ids),
                 'sortType' => 'doclist',
@@ -40,7 +36,11 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
                 unset($DLparams['documents']);
             }
             if ($eSS->params['extract'] == '1' && (!isset($params['prepare']) || $params['prepare'] == '')) {
-                $DLparams['prepare'] = array($eSS, 'prepareExtractor');
+                $eSS->bulk_words_stemmer = [];
+                foreach ($eSS->search_words as $v) {
+                    $eSS->bulk_words_stemmer[] = $eSS->stemmer->stem_word($v);
+                }
+                $DLparams['prepare'] = [ $eSS, 'prepareExtractor' ];
             }
             $params = array_merge($params, $DLparams);
             $output = $modx->runSnippet("DocLister", $params);

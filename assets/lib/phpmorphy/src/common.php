@@ -177,9 +177,9 @@ class phpMorphy {
 
         // variables with two underscores uses lazy paradigm, i.e. initialized at first time access
         //$__common_morphier,
-        //$__predict_by_suf_morphier,
-        //$__predict_by_db_morphier,
-        //$__bulk_morphier,
+        $__predict_by_suf_morphier,
+        $__predict_by_db_morphier,
+        $__bulk_morphier,
         //$__word_descriptor_serializer,
 
         $helper,
@@ -197,6 +197,18 @@ class phpMorphy {
         }
 
         $this->last_prediction_type = self::PREDICT_BY_NONE;
+        $this->__bulk_morphier = $this->createBulkMorphier(
+            $this->common_fsa,
+            $this->helper
+        );
+        $this->__predict_by_db_morphier = $this->createPredictByDbMorphier(
+            $this->predict_fsa,
+            $this->helper
+        );
+        $this->__predict_by_suf_morphier = $this->createPredictBySuffixMorphier(
+            $this->common_fsa,
+            $this->helper
+        );
     }
 
     /**

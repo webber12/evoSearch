@@ -891,27 +891,33 @@ class phpMorphy_WordDescriptor_Collection implements Countable, IteratorAggregat
         return $result;
     }
     
-    function offsetExists($off) {
+    function offsetExists($off): bool
+    {
         return isset($this->descriptors[$off]);
     }
     
-    function offsetUnset($off) {
+    function offsetUnset($off): void
+    {
         throw new phpMorphy_Exception(__CLASS__ . " is not mutable");
     }
     
-    function offsetSet($off, $value) {
+    function offsetSet($off, $value): void
+    {
         throw new phpMorphy_Exception(__CLASS__ . " is not mutable");
     }
     
-    function offsetGet($off) {
+    function offsetGet($off): mixed
+    {
         return $this->getDescriptor($off);
     }
     
-    function count() {
+    function count(): int
+    {
         return count($this->descriptors);
     }
     
-    function getIterator() {
+    function getIterator(): Iterator
+    {
         return new ArrayIterator($this->descriptors);
     }
 }
@@ -1123,29 +1129,35 @@ class phpMorphy_WordDescriptor implements Countable, ArrayAccess, IteratorAggreg
 //        return count($result) ? $result : false;
     }
     
-    function count() {
+    function count(): int
+    {
         return count($this->readAllForms());
     }
     
-    function offsetExists($off) {
+    function offsetExists($off): bool
+    {
         $this->readAllForms();
         
         return isset($this->all_forms[$off]);
     }
     
-    function offsetSet($off, $value) {
+    function offsetSet($off, $value): void
+    {
         throw new phpMorphy_Exception(__CLASS__ . " is not mutable");
     }
     
-    function offsetUnset($off) {
+    function offsetUnset($off): void
+    {
         throw new phpMorphy_Exception(__CLASS__ . " is not mutable");
     }
     
-    function offsetGet($off) {
+    function offsetGet($off): mixed
+    {
         return $this->getWordForm($off);
     }
     
-    function getIterator() {
+    function getIterator(): Iterator
+    {
         $this->readAllForms();
         
         return new ArrayIterator($this->all_forms);

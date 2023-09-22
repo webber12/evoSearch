@@ -31,6 +31,18 @@ public $txt_ext_array = array();
 //словоформы всех слов из поисковой строки, строка. Слова разделены пробелами. Основной текст для организации полнотекстового поиска
 public $txt_ext = array();
 
+protected $modx;
+public $search_field;
+protected $id;
+protected $content_table;
+protected $search_table;
+public $action;
+public $stemmer;
+protected $original;
+public $search_words;
+protected $uppercase_search_words;
+protected $baseform_search_words;
+public $bulk_words_stemmer;
 
 public function __construct($modx, $params)
 {
@@ -138,13 +150,15 @@ public function prepareWords()
 }
 
 //функция для prepare-сниппета DocLister (готовим данные для плейсхолдера [+extract+] в чанк вывода результатов DocLister
-public function prepareExtractor($data)
+public function prepareExtractor($data, $modx, $DL, $extDL)
 {
-    $data = $this->makeHighlight ($data);
+    if(!empty($data)) {
+        $data = $this->makeHighlight($data);
+    }
     return $data;
 }
 //делаем подсветку на основе стеммера
-public function makeHighlight ($data)
+public function makeHighlight($data)
 {
     if (is_array($this->bulk_words_stemmer) && !empty($this->bulk_words_stemmer)) {
         $input = implode('|', $this->bulk_words_stemmer);
@@ -156,7 +170,7 @@ public function makeHighlight ($data)
         } else{
             $text = $this->getTextForHighlight($data["content"]);
         }
-        $pagetitle = $this->modx->stripTags($data["pagetitle"]);
+        $pagetitle = $this->modx->stripTags($data["pagetitle"] ?: '');
         $data["extract"] = preg_replace($pattern, $replacement, $text);
         $data["pagetitle"] = preg_replace($pattern, $replacement, $pagetitle);
     }
@@ -164,11 +178,11 @@ public function makeHighlight ($data)
 }
 
 //вырезаем нужный кусок текста нужной длины (примерно)
-private function getTextForHighlight($text)
+protected function getTextForHighlight($text)
 {
     $max_length = isset($this->params['maxlength']) && (int)$this->params['maxlength'] != 0 ? (int)$this->params['maxlength'] : 350;
     $limit = $max_length + 12;
-    $text = $this->modx->stripTags($text);
+    $text = $this->modx->stripTags($text ?: '');
     $pos = array();
     foreach ($this->bulk_words_stemmer as $word) {
         $pos[$word] = mb_strripos(mb_strtolower($text, 'UTF-8'), $word, 0, 'UTF-8');
