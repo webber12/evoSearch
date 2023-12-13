@@ -182,7 +182,11 @@ public function injectTVs($id, $content)
                 //для таких элементов берем из дерева их истинные значения
                 //для остальных - оставляем оригинальные значения TV
                 if (stristr($el['elements'], 'getParamsFromTree') === FALSE) {
-                    $tvs[] = str_replace('||', ' ', $TvValues[$tv_name]);
+                    $value = $this->invokePrepare([ 'id' => $id, 'content' => $content, 'event' => 'OnBeforeInjectTVs', 'row' => $el, 'value' => $TvValues[$tv_name] ]);
+                    if(empty($value)) {
+                        $value =  str_replace('||', ' ', $TvValues[$tv_name]);
+                    }
+                    $tvs[] = $value;
                 } else {
                     $docs = str_replace('||', ',', $TvValues[$tv_name]);
                     if ($docs && $docs != '') {
