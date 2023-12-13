@@ -168,7 +168,7 @@ public function makeHighlight($data)
         if (isset($this->params['extract_with_tv']) && $this->params['extract_with_tv'] == '1') {
             $text = $this->getTextForHighlight($data[$this->ext_content_field]);
         } else{
-            $text = $this->getTextForHighlight($data["content"]);
+            $text = $this->getTextForHighlight($data["content"] ?: $data["introtext"]);
         }
         $pagetitle = $this->modx->stripTags($data["pagetitle"] ?: '');
         $data["extract"] = preg_replace($pattern, $replacement, $text);

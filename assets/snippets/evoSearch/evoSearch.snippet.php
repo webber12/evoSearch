@@ -42,6 +42,9 @@ if (isset($_GET[$eSS->search_field]) && $_GET[$eSS->search_field] != '') {
                 }
                 $DLparams['prepare'] = [ $eSS, 'prepareExtractor' ];
             }
+            if(!empty($params['extract_with_tv'])) {
+                $DLparams['controller'] = 'site_content_evosearch';
+            }
             $params = array_merge($params, $DLparams);
             $output = $modx->runSnippet("DocLister", $params);
             if ($eSS->params['show_stat'] == '1' && !empty($output)) {
