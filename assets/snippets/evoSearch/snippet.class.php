@@ -404,9 +404,18 @@ public function parseNoresult($noResult)
 public function makeAddLikeCond($search_field = 'pagetitle', $separator = 'AND', $inner_separator = 'AND')
 {
     $out = '';
+    
+    // фикс для 8 версии
+    $v = $this->modx->db->getVersion();
+    if ($v[0] === '8') {
+        $boundaries = array('\\b', '\\b');
+    } else {
+        $boundaries = array('[[:<:]]', '[[:>:]]');
+    }
+    
     foreach ($this->search_words as $word) {
         $word = mb_strtolower($word, "UTF-8");
-        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
+        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '". $boundaries[0] . $word . $boundaries[1]."'";
     }
     if (!empty($tmp)) {
         $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
