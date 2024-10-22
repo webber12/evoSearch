@@ -406,7 +406,11 @@ public function makeAddLikeCond($search_field = 'pagetitle', $separator = 'AND',
     $out = '';
     foreach ($this->search_words as $word) {
         $word = mb_strtolower($word, "UTF-8");
-        $tmp[] = " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
+        $mysqlVersion = !empty($this->params['mysqlVersion']) ? $this->params['mysqlVersion'] : 5;
+        $sql = $mysqlVersion == 8 ? 
+            " LOWER(`" . $search_field . "`) REGEXP '\\\\b(" . $word . ")\\\\b'" : 
+            " LOWER(`" . $search_field . "`) REGEXP '[[:<:]]" . $word . "[[:>:]]'";
+        $tmp[] = $sql;
     }
     if (!empty($tmp)) {
         $out = implode(' ' . trim($inner_separator) . ' ', $tmp);
