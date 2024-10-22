@@ -369,7 +369,7 @@ public function getSearchResultInfo()
             'stat_request' => $this->Get('txt_original')
         )
     );
-    return $out;
+    return empty($this->params['api']) ? $out : '';
 }
 
 public function parseTpl($arr1, $arr2, $tpl)
