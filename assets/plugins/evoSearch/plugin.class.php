@@ -23,6 +23,14 @@ public $ext_content_field;
 //сформированный на основе $ext_content_field индекс из словоформ этого поля
 public $ext_content_index_field;
 
+public $modx;
+public $id;
+public $content_table_name;
+public $content_table;
+public $search_table;
+public $search_fields;
+
+
 public function __construct($modx, $params, $min_length = 2, $ext_content_field = 'content_with_tv', $ext_content_index_field = 'content_with_tv_index', $search_table = 'evosearch_table', $content_table = 'site_content', $search_fields = 'pagetitle,longtitle,description,introtext,content')
 {
     $this->modx = $modx;
